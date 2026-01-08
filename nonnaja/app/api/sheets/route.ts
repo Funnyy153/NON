@@ -40,8 +40,72 @@ export async function GET() {
       const rowData: Record<string, string> = {};
       headers.forEach((header: string, index: number) => {
         const cell = row.c[index];
-        // ดึงค่าจาก cell.v (value) หรือ cell.f (formatted value) ถ้าไม่มี
-        const value = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : (cell.f || '')) : '';
+        let value = '';
+        
+        if (cell) {
+          // ถ้าเป็น Timestamp column
+          if (header.toLowerCase().includes('timestamp')) {
+            let date: Date | null = null;
+            
+            // ลองแปลงจาก cell.v (raw value)
+            if (cell.v !== null && cell.v !== undefined) {
+              if (cell.v instanceof Date) {
+                date = cell.v;
+              } else if (typeof cell.v === 'object' && 'getTime' in cell.v) {
+                date = new Date(cell.v);
+              } else if (typeof cell.v === 'number') {
+                // Google Sheets date serial number (days since 1900-01-01)
+                // Excel/Sheets date serial: 1 = 1900-01-01, แต่ JavaScript Date ใช้ 1970-01-01
+                // ดังนั้นต้องแปลง: (cell.v - 25569) * 86400 * 1000
+                // 25569 = days between 1900-01-01 and 1970-01-01
+                date = new Date((cell.v - 25569) * 86400 * 1000);
+              } else if (typeof cell.v === 'string') {
+                date = new Date(cell.v);
+              }
+            }
+            
+            // ถ้ายังไม่มี date และมี cell.f ลอง parse จาก formatted value
+            if (!date && cell.f) {
+              // ลอง parse จาก formatted string เช่น "1/7/2026 18:39:45"
+              const dateMatch = cell.f.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/);
+              if (dateMatch) {
+                const [, month, day, year, hours, minutes, seconds] = dateMatch;
+                date = new Date(
+                  parseInt(year),
+                  parseInt(month) - 1,
+                  parseInt(day),
+                  parseInt(hours),
+                  parseInt(minutes),
+                  parseInt(seconds)
+                );
+              } else {
+                // ลอง parse เป็น Date ทั่วไป
+                date = new Date(cell.f);
+              }
+            }
+            
+            // แปลง Date เป็นรูปแบบ M/D/YYYY HH:mm:ss
+            if (date && !isNaN(date.getTime())) {
+              const month = date.getMonth() + 1;
+              const day = date.getDate();
+              const year = date.getFullYear();
+              const hours = date.getHours();
+              const minutes = date.getMinutes();
+              const seconds = date.getSeconds();
+              value = `${month}/${day}/${year} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            } else if (cell.f) {
+              // ถ้า parse ไม่ได้ ใช้ formatted value ตามเดิม
+              value = cell.f;
+            }
+          } else if (cell.f) {
+            // สำหรับคอลัมน์อื่น ใช้ formatted value ถ้ามี
+            value = cell.f;
+          } else if (cell.v !== null && cell.v !== undefined) {
+            // ใช้ raw value
+            value = String(cell.v);
+          }
+        }
+        
         rowData[header] = value;
       });
       return rowData;
