@@ -6,11 +6,10 @@ const GID = '44722663';
 
 export async function GET() {
   try {
-    // ใช้ CSV export URL สำหรับ public sheet
-    // หรือใช้ Google Sheets API สำหรับ private sheet
-    const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=${GID}`;
+    // ใช้ JSON format แทน CSV เพื่อให้ได้ข้อมูลครบถ้วนกว่า
+    const jsonUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${GID}`;
     
-    const response = await fetch(csvUrl, {
+    const response = await fetch(jsonUrl, {
       cache: 'no-store', // ไม่ cache เพื่อให้ได้ข้อมูลล่าสุด
     });
 
@@ -18,65 +17,54 @@ export async function GET() {
       throw new Error(`Failed to fetch sheet: ${response.statusText}`);
     }
 
-    const csvText = await response.text();
+    const jsonText = await response.text();
     
-    // ฟังก์ชันสำหรับ parse CSV ที่ถูกต้อง
-    function parseCSVLine(line: string): string[] {
-      const values: string[] = [];
-      let current = '';
-      let inQuotes = false;
-      
-      for (let i = 0; i < line.length; i++) {
-        const char = line[i];
-        const nextChar = line[i + 1];
-        
-        if (char === '"') {
-          if (inQuotes && nextChar === '"') {
-            // Escaped quote
-            current += '"';
-            i++; // Skip next quote
-          } else {
-            // Toggle quote state
-            inQuotes = !inQuotes;
-          }
-        } else if (char === ',' && !inQuotes) {
-          // End of field
-          values.push(current.trim());
-          current = '';
-        } else {
-          current += char;
-        }
-      }
-      // Add last field
-      values.push(current.trim());
-      
-      return values;
+    // Google Sheets JSON format มี prefix "google.visualization.Query.setResponse(" และ suffix ");"
+    // ต้องตัดออกก่อน
+    const jsonMatch = jsonText.match(/google\.visualization\.Query\.setResponse\((.*)\);/s);
+    if (!jsonMatch) {
+      throw new Error('Invalid response format from Google Sheets');
     }
-
-    // แปลง CSV เป็น JSON
-    const lines = csvText.split('\n').filter(line => line.trim());
-    if (lines.length === 0) {
+    
+    const jsonData = JSON.parse(jsonMatch[1]);
+    
+    // แปลงข้อมูลจาก Google Sheets format เป็น array of objects
+    if (!jsonData.table || !jsonData.table.rows) {
       return NextResponse.json({ data: [] });
     }
-
-    // แยก header
-    const headers = parseCSVLine(lines[0]).map(h => h.replace(/^"|"$/g, '').trim());
     
-    // แปลงแต่ละแถวเป็น object
-    const data = lines.slice(1).map(line => {
-      const values = parseCSVLine(line);
-      
-      const row: Record<string, string> = {};
-      headers.forEach((header, index) => {
-        row[header] = values[index]?.replace(/^"|"$/g, '') || '';
+    const headers = jsonData.table.cols.map((col: any) => col.label || '');
+    const rows = jsonData.table.rows;
+    
+    const data = rows.map((row: any) => {
+      const rowData: Record<string, string> = {};
+      headers.forEach((header: string, index: number) => {
+        const cell = row.c[index];
+        // ดึงค่าจาก cell.v (value) หรือ cell.f (formatted value) ถ้าไม่มี
+        const value = cell ? (cell.v !== null && cell.v !== undefined ? String(cell.v) : (cell.f || '')) : '';
+        rowData[header] = value;
       });
-      return row;
-    }).filter(row => {
-      // กรองแถวที่ว่างเปล่า (ไม่มีข้อมูลเลย)
-      return Object.values(row).some(val => val.trim() !== '');
+      return rowData;
     });
-
-    return NextResponse.json({ data });
+    
+    // ไม่กรองแถวใดๆ ออก ให้แสดงทุกแถว (รวมแถวที่ว่างเปล่าด้วย)
+    // แต่ถ้าต้องการกรองแถวที่ว่างเปล่าทั้งหมดจริงๆ ให้ใช้โค้ดด้านล่าง
+    // .filter((row: Record<string, string>) => {
+    //   return Object.values(row).some(val => String(val).trim() !== '');
+    // });
+    
+    console.log(`Found ${rows.length} rows, ${headers.length} columns`);
+    console.log(`Headers:`, headers);
+    console.log(`Data rows:`, data.length);
+    
+    return NextResponse.json({ 
+      data, 
+      debug: { 
+        totalRows: rows.length, 
+        headers: headers.length, 
+        dataRows: data.length 
+      } 
+    });
   } catch (error) {
     console.error('Error fetching Google Sheet:', error);
     return NextResponse.json(
