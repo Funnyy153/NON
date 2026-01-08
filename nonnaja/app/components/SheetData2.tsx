@@ -307,9 +307,10 @@ export default function SheetData2() {
         h && (h.includes('สถานะ') || h.toLowerCase().includes('status'))
       ) || 'สถานะ';
       
+      // บันทึกค่าไปยัง Google Sheet: ติ๊ก = '1', ไม่ติ๊ก = '0'
       console.log('Sending update request:', {
         rowIndex,
-        value: newCheckedState ? '1' : '0',
+        value: newCheckedState ? '1' : '0', // ติ๊ก = '1', ไม่ติ๊ก = '0'
         columnName: statusColumn
       });
       
@@ -320,7 +321,7 @@ export default function SheetData2() {
         },
         body: JSON.stringify({
           rowIndex: rowIndex, // 0-based index ของ data array
-          value: newCheckedState ? '1' : '0',
+          value: newCheckedState ? '1' : '0', // ติ๊ก = '1', ไม่ติ๊ก = '0'
           columnName: statusColumn
         }),
       });
@@ -579,12 +580,15 @@ export default function SheetData2() {
     const matchesStatus = (isChecked && statusFilters.checked) || (!isChecked && statusFilters.unchecked);
     
     return matchesSearch && matchesStatus;
-  });
+  }).reverse(); // เรียงลำดับจากล่างขึ้นบน (ข้อมูลใหม่สุดอยู่บน)
 
-  // Create a mapping from filtered index to original index
+  // Create a mapping from filtered index to original index (เรียงจากล่างขึ้นบน)
   const originalIndexMap = new Map<number, number>();
   let filteredIndex = 0;
-  data.forEach((row, originalIndex) => {
+  // วนลูปจากท้ายไปหน้า (reverse order) เพื่อให้ข้อมูลใหม่สุดอยู่บน
+  for (let i = data.length - 1; i >= 0; i--) {
+    const row = data[i];
+    const originalIndex = i;
     const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
     const unit = row[unitHeader] || '';
     const matchesSearch = !searchTerm || unit.toLowerCase().includes(searchTerm.toLowerCase());
@@ -595,7 +599,7 @@ export default function SheetData2() {
       originalIndexMap.set(filteredIndex, originalIndex);
       filteredIndex++;
     }
-  });
+  }
 
   return (
     <>
@@ -738,7 +742,10 @@ export default function SheetData2() {
                     {isChecked ? (
                       <>
                         <span className="text-orange-900 text-sm font-semibold">ตรวจสอบแล้ว</span>
-                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md">
+                        <div 
+                          className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
+                          onClick={() => handleCheckboxChange(index)}
+                        >
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>

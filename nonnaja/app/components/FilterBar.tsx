@@ -5,9 +5,11 @@ import { useState } from 'react';
 interface FilterBarProps {
   onSearchChange: (searchTerm: string) => void;
   onStatusFilterChange: (filters: { checked: boolean; unchecked: boolean }) => void;
+  showClosedCases?: boolean;
+  onCloseCaseFilterChange?: (showClosed: boolean) => void;
 }
 
-export default function FilterBar({ onSearchChange, onStatusFilterChange }: FilterBarProps) {
+export default function FilterBar({ onSearchChange, onStatusFilterChange, showClosedCases, onCloseCaseFilterChange }: FilterBarProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilters, setStatusFilters] = useState({
     checked: true,
@@ -34,6 +36,7 @@ export default function FilterBar({ onSearchChange, onStatusFilterChange }: Filt
     setStatusFilters(newFilters);
     onStatusFilterChange(newFilters);
   };
+
 
   return (
     <div className="bg-orange-50 rounded-xl p-4 shadow-md border-2 border-orange-200 mb-6 w-full">
@@ -85,6 +88,23 @@ export default function FilterBar({ onSearchChange, onStatusFilterChange }: Filt
             </label>
           </div>
         </div>
+
+        {/* Close Case Filter */}
+        {showClosedCases !== undefined && onCloseCaseFilterChange && (
+          <div className="flex items-center gap-3">
+            <label className="text-sm font-semibold text-orange-800 whitespace-nowrap">
+              ปิดเคส :
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showClosedCases}
+                onChange={(e) => onCloseCaseFilterChange(e.target.checked)}
+                className="w-5 h-5 rounded-md border-2 border-orange-400 text-orange-600 cursor-pointer"
+              />
+            </label>
+          </div>
+        )}
       </div>
     </div>
   );
