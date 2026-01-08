@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,9 +21,8 @@ export default function Home() {
       return;
     }
     setError("");
-    // Handle login logic here
-    console.log("Login successful");
-    // Redirect or show success message
+    // Redirect to before page
+    router.push("/pages/before");
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
