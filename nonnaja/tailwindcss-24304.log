@@ -6867,3 +6867,117 @@
 2026-01-08T18:24:44.420575Z  INFO get_files: tailwindcss_oxide::scanner: exit
 2026-01-08T18:24:44.420936Z  INFO get_globs: tailwindcss_oxide::scanner: enter
 2026-01-08T18:24:44.420945Z  INFO get_globs: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.859765Z  INFO scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.863474Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app"
+2026-01-08T18:30:32.863833Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api"
+2026-01-08T18:30:32.864173Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\drive-image"
+2026-01-08T18:30:32.864667Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets"
+2026-01-08T18:30:32.865070Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\delete"
+2026-01-08T18:30:32.865651Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\update"
+2026-01-08T18:30:32.866165Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2"
+2026-01-08T18:30:32.866515Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\delete"
+2026-01-08T18:30:32.867005Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\update"
+2026-01-08T18:30:32.867485Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3"
+2026-01-08T18:30:32.867752Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\delete"
+2026-01-08T18:30:32.868126Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\update"
+2026-01-08T18:30:32.868680Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components"
+2026-01-08T18:30:32.869194Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData.tsx"
+2026-01-08T18:30:32.869354Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData2.tsx"
+2026-01-08T18:30:32.869495Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData3.tsx"
+2026-01-08T18:30:32.870020Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages"
+2026-01-08T18:30:32.870541Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\after"
+2026-01-08T18:30:32.871288Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\alert"
+2026-01-08T18:30:32.871867Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\before"
+2026-01-08T18:30:32.873935Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\public"
+2026-01-08T18:30:32.875282Z  INFO scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.875327Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.875338Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.875355Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 3 file(s)
+2026-01-08T18:30:32.875643Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData.tsx"
+2026-01-08T18:30:32.875657Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData2.tsx"
+2026-01-08T18:30:32.875747Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData3.tsx"
+2026-01-08T18:30:32.875842Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.875865Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.875873Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.877666Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.877757Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.878300Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.879170Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.879210Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.884548Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app"
+2026-01-08T18:30:32.885066Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api"
+2026-01-08T18:30:32.885648Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\drive-image"
+2026-01-08T18:30:32.887200Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets"
+2026-01-08T18:30:32.887728Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\delete"
+2026-01-08T18:30:32.888327Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\update"
+2026-01-08T18:30:32.888910Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2"
+2026-01-08T18:30:32.889357Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\delete"
+2026-01-08T18:30:32.889980Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\update"
+2026-01-08T18:30:32.890400Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3"
+2026-01-08T18:30:32.890745Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\delete"
+2026-01-08T18:30:32.891350Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\update"
+2026-01-08T18:30:32.892105Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components"
+2026-01-08T18:30:32.893347Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages"
+2026-01-08T18:30:32.893803Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\after"
+2026-01-08T18:30:32.894202Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\alert"
+2026-01-08T18:30:32.894636Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\before"
+2026-01-08T18:30:32.895751Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\public"
+2026-01-08T18:30:32.896657Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.896837Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:32.897130Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:32.897141Z  INFO get_globs: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.040094Z  INFO scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.044163Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app"
+2026-01-08T18:30:40.044671Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api"
+2026-01-08T18:30:40.045130Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\drive-image"
+2026-01-08T18:30:40.045700Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets"
+2026-01-08T18:30:40.046240Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\delete"
+2026-01-08T18:30:40.046964Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\update"
+2026-01-08T18:30:40.047589Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2"
+2026-01-08T18:30:40.048032Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\delete"
+2026-01-08T18:30:40.048712Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\update"
+2026-01-08T18:30:40.049319Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3"
+2026-01-08T18:30:40.049712Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\delete"
+2026-01-08T18:30:40.050323Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\update"
+2026-01-08T18:30:40.050983Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components"
+2026-01-08T18:30:40.051639Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData3.tsx"
+2026-01-08T18:30:40.052327Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages"
+2026-01-08T18:30:40.052742Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\after"
+2026-01-08T18:30:40.053285Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\alert"
+2026-01-08T18:30:40.053915Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\before"
+2026-01-08T18:30:40.055897Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\public"
+2026-01-08T18:30:40.057415Z  INFO scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.057490Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.057513Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.057550Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 1 file(s)
+2026-01-08T18:30:40.057997Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components\\SheetData3.tsx"
+2026-01-08T18:30:40.058096Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.058122Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.058135Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.058985Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.059020Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.059391Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.060300Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.060321Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.065549Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app"
+2026-01-08T18:30:40.066049Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api"
+2026-01-08T18:30:40.066372Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\drive-image"
+2026-01-08T18:30:40.066974Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets"
+2026-01-08T18:30:40.067379Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\delete"
+2026-01-08T18:30:40.068079Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets\\update"
+2026-01-08T18:30:40.068896Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2"
+2026-01-08T18:30:40.069271Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\delete"
+2026-01-08T18:30:40.069912Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets2\\update"
+2026-01-08T18:30:40.070550Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3"
+2026-01-08T18:30:40.071042Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\delete"
+2026-01-08T18:30:40.071680Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\api\\sheets3\\update"
+2026-01-08T18:30:40.072507Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\components"
+2026-01-08T18:30:40.074082Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages"
+2026-01-08T18:30:40.074589Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\after"
+2026-01-08T18:30:40.075140Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\alert"
+2026-01-08T18:30:40.075799Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\app\\pages\\before"
+2026-01-08T18:30:40.077717Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nonnaja\\public"
+2026-01-08T18:30:40.079103Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.079813Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-01-08T18:30:40.080260Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-01-08T18:30:40.080272Z  INFO get_globs: tailwindcss_oxide::scanner: exit

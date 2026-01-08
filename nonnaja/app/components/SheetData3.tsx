@@ -1018,79 +1018,6 @@ export default function SheetData3() {
     }
   };
 
-  // ฟังก์ชันดาวน์โหลดรูปทั้งหมด
-  const handleExport = async (rowIndex: number, row: SheetRow) => {
-    try {
-      const allHeaders = Object.keys(row);
-      
-      // หาคอลัมน์ที่มีรูปภาพ (ภาพเหตุการณ์และหลักฐาน)
-      const imageHeader = allHeaders.find(header => 
-        header.includes('ภาพเหตุการณ์') || header.includes('หลักฐาน')
-      );
-
-      // ดึงข้อมูลหน่วยและ timestamp
-      const unitHeader = allHeaders.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
-      const timestampHeader = allHeaders.find(h => h.toLowerCase().includes('timestamp')) || '';
-      
-      const unit = row[unitHeader] || 'unknown';
-      const timestamp = row[timestampHeader] || '';
-      
-      // แปลง timestamp เป็นชื่อไฟล์ (แทน / และ : ด้วย -)
-      const timestampForFilename = timestamp
-        .replace(/\//g, '-')
-        .replace(/:/g, '-')
-        .replace(/\s+/g, '_')
-        .trim();
-      
-      const baseFilename = `${unit}_${timestampForFilename}`.replace(/[^a-zA-Z0-9_\-ก-๙]/g, '_');
-
-      // ดาวน์โหลดรูปทั้งหมดจากคอลัมน์ภาพเหตุการณ์และหลักฐาน
-      if (imageHeader) {
-        const value = row[imageHeader] || '';
-        const driveLinks = extractDriveLinks(value);
-        
-        // ดาวน์โหลดทุกรูป
-        for (let j = 0; j < driveLinks.length; j++) {
-          const driveLink = driveLinks[j];
-          const imageUrl = convertDriveLinkToImageUrl(driveLink);
-          
-          if (imageUrl) {
-            try {
-              // ดาวน์โหลดรูป
-              const response = await fetch(imageUrl);
-              if (!response.ok) {
-                console.error(`Failed to fetch image: ${response.statusText}`);
-                continue;
-              }
-              const blob = await response.blob();
-              
-              // สร้างชื่อไฟล์
-              const filename = `${baseFilename}_ภาพ${j + 1}.jpg`;
-              
-              // สร้าง link และดาวน์โหลด
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = filename;
-              document.body.appendChild(a);
-              a.click();
-              document.body.removeChild(a);
-              window.URL.revokeObjectURL(url);
-              
-              // รอสักครู่ก่อนดาวน์โหลดรูปถัดไป
-              await new Promise(resolve => setTimeout(resolve, 500));
-            } catch (error) {
-              console.error(`Error downloading image ${j + 1}:`, error);
-            }
-          }
-        }
-      }
-    } catch (error) {
-      console.error('Error exporting images:', error);
-      alert('เกิดข้อผิดพลาดในการดาวน์โหลดรูปภาพ');
-    }
-  };
-
   // Filter data based on search term, status filters, and close case filters
   const filteredData = data.filter((row, index) => {
     // Filter by search term (หน่วยเลือกตั้ง)
@@ -1290,17 +1217,6 @@ export default function SheetData3() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <span className="text-xs font-medium">Reject</span>
-                  </button>
-                  
-                  {/* ปุ่ม Export */}
-                  <button
-                    onClick={() => handleExport(index, row)}
-                    className="bg-blue-800 hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px]"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <span className="text-xs font-medium">Export</span>
                   </button>
                   
                   {/* ปุ่ม Detail */}
