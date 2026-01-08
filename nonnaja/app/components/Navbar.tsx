@@ -18,7 +18,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="w-full py-5 sm:py-6 px-4 sm:px-6 shadow-md"
+      className="fixed top-0 left-0 right-0 w-full py-5 sm:py-6 px-4 sm:px-6 shadow-md z-50"
       style={{ backgroundColor: "#FF6A13" }}
     >
       <div className="flex flex-wrap gap-3 sm:gap-4">
