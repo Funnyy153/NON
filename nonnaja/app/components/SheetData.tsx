@@ -68,19 +68,108 @@ function ImageModal({
       onClick={onClose}
     >
       <div className="relative max-w-7xl max-h-full">
-        <button
-          onClick={onClose}
-          className="absolute -top-10 right-0 text-gray-800 text-2xl font-bold hover:text-gray-600 transition-colors bg-white bg-opacity-90 rounded-full w-10 h-10 flex items-center justify-center shadow-lg border border-gray-300"
-          aria-label="Close"
-        >
-          ✕
-        </button>
+       
         <img
           src={imageUrl}
           alt="Expanded view"
           className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl bg-white p-2"
           onClick={(e) => e.stopPropagation()}
         />
+      </div>
+    </div>
+  );
+}
+
+// Modal component สำหรับยืนยันการลบ
+function DeleteConfirmationModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  unitName
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  unitName?: string;
+}) {
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
+      onClick={onClose}
+    >
+      <div
+        className="rounded-2xl shadow-2xl p-8 max-w-md w-full"
+        style={{ backgroundColor: '#FF6A13' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Warning Icon */}
+        <div className="flex justify-center mb-4">
+          <div className="w-20 h-20 rounded-full flex items-center justify-center border-4"
+               style={{ 
+                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                 borderColor: 'rgba(255, 255, 255, 0.3)'
+               }}>
+            <span className="text-4xl font-bold text-white">!</span>
+          </div>
+        </div>
+
+        {/* Main Question */}
+        <h3 className="text-2xl font-bold text-white text-center mb-3">
+          คุณแน่ใจหรือไม่?
+        </h3>
+
+        {/* Warning Message */}
+        <div className="mb-6 text-center">
+          <p className="text-white/90 text-sm mb-3">
+            คุณจะไม่สามารถกู้คืนรายการนี้ได้!
+          </p>
+          {unitName && (
+            <p className="text-white/80 text-sm  p-3 rounded-lg">
+              <span className="font-semibold text-black">หน่วย:</span> <span className="text-black">{unitName}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 text-white font-medium transition-colors backdrop-blur-sm"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="px-6 py-2.5 rounded-lg bg-white text-orange-600 hover:bg-orange-50 font-bold transition-colors shadow-lg"
+            style={{ color: '#FF6A13' }}
+          >
+            ใช่, ลบเลย!
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -94,6 +183,9 @@ export default function SheetData() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
+  const [rejectedRows, setRejectedRows] = useState<Set<number>>(new Set());
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [rowToDelete, setRowToDelete] = useState<number | null>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -164,16 +256,249 @@ export default function SheetData() {
     setSelectedImage(null);
   };
 
-  const handleCheckboxChange = (rowIndex: number) => {
+  const handleCheckboxChange = async (rowIndex: number) => {
+    const newCheckedState = !checkedRows.has(rowIndex);
+    
+    // อัปเดต state ทันที
     setCheckedRows(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(rowIndex)) {
-        newSet.delete(rowIndex);
-      } else {
+      if (newCheckedState) {
         newSet.add(rowIndex);
+      } else {
+        newSet.delete(rowIndex);
       }
       return newSet;
     });
+    
+    // อัปเดตค่าใน Google Sheet
+    try {
+      // หา column name "สถานะ" จาก headers
+      const statusColumn = headers.find(h => 
+        h && (h.includes('สถานะ') || h.toLowerCase().includes('status'))
+      ) || 'สถานะ';
+      
+      console.log('Sending update request:', {
+        rowIndex,
+        value: newCheckedState ? '1' : '0',
+        columnName: statusColumn
+      });
+      
+      const response = await fetch('/api/sheets/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rowIndex: rowIndex, // 0-based index ของ data array
+          value: newCheckedState ? '1' : '0',
+          columnName: statusColumn
+        }),
+      });
+      
+      console.log('Update response status:', response.status);
+      
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error('Update error data:', errorData);
+        } catch {
+          const responseText = await response.text();
+          console.error('Update error response text:', responseText);
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}`, details: responseText };
+        }
+        throw new Error(errorData.error || errorData.message || 'Failed to update sheet');
+      }
+      
+      const result = await response.json();
+      console.log('Sheet updated successfully:', result);
+    } catch (error) {
+      console.error('Error updating sheet:', error);
+      // Revert state if update failed
+      setCheckedRows(prev => {
+        const newSet = new Set(prev);
+        if (newCheckedState) {
+          newSet.delete(rowIndex);
+        } else {
+          newSet.add(rowIndex);
+        }
+        return newSet;
+      });
+      
+      let errorMessage = 'ไม่ทราบสาเหตุ';
+      let errorDetails = '';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+        // ลอง parse error message เพื่อดู details
+        try {
+          const errorMatch = error.message.match(/details[:\s]+(.+)/i);
+          if (errorMatch) {
+            errorDetails = errorMatch[1];
+          }
+        } catch {}
+      }
+      
+      const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}${errorDetails ? '\n\nรายละเอียด: ' + errorDetails : ''}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log สำหรับรายละเอียดเพิ่มเติม`;
+      
+      alert(fullMessage);
+    }
+  };
+
+  const handleRejectChange = (rowIndex: number) => {
+    // เปิด modal ยืนยันการลบ
+    setRowToDelete(rowIndex);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (rowToDelete === null) return;
+
+    const rowIndex = rowToDelete;
+
+    try {
+      // เรียก API เพื่อลบแถวใน Google Sheet
+      const response = await fetch('/api/sheets/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rowIndex: rowIndex, // 0-based index ของ data array
+        }),
+      });
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
+        }
+        throw new Error(errorData.error || errorData.message || 'Failed to delete row');
+      }
+
+      const result = await response.json();
+      console.log('Row deleted:', result);
+
+      // ลบการ์ดออกจาก state (ลบข้อมูลออกจาก array)
+      setData(prevData => prevData.filter((_, index) => index !== rowIndex));
+      
+      // ลบออกจาก rejectedRows และ checkedRows ด้วย
+      setRejectedRows(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(rowIndex);
+        // ลบ index ที่มากกว่า rowIndex ออกด้วย (เพราะ array ลดลง)
+        const updatedSet = new Set<number>();
+        newSet.forEach(idx => {
+          if (idx < rowIndex) {
+            updatedSet.add(idx);
+          } else if (idx > rowIndex) {
+            updatedSet.add(idx - 1);
+          }
+        });
+        return updatedSet;
+      });
+      
+      setCheckedRows(prev => {
+        const newSet = new Set(prev);
+        const updatedSet = new Set<number>();
+        newSet.forEach(idx => {
+          if (idx < rowIndex) {
+            updatedSet.add(idx);
+          } else if (idx > rowIndex) {
+            updatedSet.add(idx - 1);
+          }
+        });
+        return updatedSet;
+      });
+    } catch (error) {
+      console.error('Error deleting row:', error);
+      const errorMessage = error instanceof Error ? error.message : 'ไม่ทราบสาเหตุ';
+      alert(`ไม่สามารถลบแถวได้\n\n${errorMessage}`);
+    } finally {
+      setRowToDelete(null);
+    }
+  };
+
+  // ฟังก์ชันดาวน์โหลดรูปทั้ง 3 รูป
+  const handleExport = async (rowIndex: number, row: SheetRow) => {
+    try {
+      // ใช้ headers แทน reorderedHeaders เพราะ reorderedHeaders อาจยังไม่ได้ define
+      const allHeaders = Object.keys(row);
+      
+      // หาคอลัมน์ที่มีรูปภาพ (ป้ายไวนิล, แบบ, รายชื่อ)
+      const imageHeaders = allHeaders.filter(header => 
+        header.includes('ป้ายไวนิล') || 
+        header.includes('แบบ') || 
+        header.includes('รายชื่อ')
+      );
+
+      // ดึงข้อมูลหน่วยและ timestamp
+      const unitHeader = allHeaders.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+      const timestampHeader = allHeaders.find(h => h.toLowerCase().includes('timestamp')) || '';
+      
+      const unit = row[unitHeader] || 'unknown';
+      const timestamp = row[timestampHeader] || '';
+      
+      // แปลง timestamp เป็นชื่อไฟล์ (แทน / และ : ด้วย -)
+      const timestampForFilename = timestamp
+        .replace(/\//g, '-')
+        .replace(/:/g, '-')
+        .replace(/\s+/g, '_')
+        .trim();
+      
+      const baseFilename = `${unit}_${timestampForFilename}`.replace(/[^a-zA-Z0-9_\-ก-๙]/g, '_');
+
+      // ดาวน์โหลดรูปแต่ละรูป
+      for (let i = 0; i < imageHeaders.length; i++) {
+        const header = imageHeaders[i];
+        const value = row[header] || '';
+        const driveLinks = extractDriveLinks(value);
+        
+        // ดาวน์โหลดทุกรูปในคอลัมน์นั้น
+        for (let j = 0; j < driveLinks.length; j++) {
+          const driveLink = driveLinks[j];
+          const imageUrl = convertDriveLinkToImageUrl(driveLink);
+          
+          if (imageUrl) {
+            try {
+              // ดาวน์โหลดรูป
+              const response = await fetch(imageUrl);
+              if (!response.ok) {
+                console.error(`Failed to fetch image: ${response.statusText}`);
+                continue;
+              }
+              const blob = await response.blob();
+              
+              // สร้างชื่อไฟล์
+              const imageType = header.includes('ป้ายไวนิล') ? 'ป้ายไวนิล' :
+                               header.includes('แบบ') ? 'แบบ' :
+                               header.includes('รายชื่อ') ? 'รายชื่อ' : 'image';
+              const filename = `${baseFilename}_${imageType}${j > 0 ? `_${j + 1}` : ''}.jpg`;
+              
+              // สร้าง link และดาวน์โหลด
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = filename;
+              document.body.appendChild(a);
+              a.click();
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(url);
+              
+              // รอสักครู่ก่อนดาวน์โหลดรูปถัดไป
+              await new Promise(resolve => setTimeout(resolve, 500));
+            } catch (error) {
+              console.error(`Error downloading image from ${header}:`, error);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error exporting images:', error);
+      alert('เกิดข้อผิดพลาดในการดาวน์โหลดรูปภาพ');
+    }
   };
 
   // ฟังก์ชันกำหนดความกว้างของคอลัมน์ตามชื่อ (return เป็น style object)
@@ -183,7 +508,7 @@ export default function SheetData() {
     
     if (header.toLowerCase().includes('timestamp')) {
       console.log('Matched: Timestamp');
-      return { width: '8.33%' }; // Timestamp: 1/12 = 8.33%
+      return { width: '9%' }; // Timestamp: 1/12 = 8.33%
     }
     if (header.includes('หน่วยเลือกตั้ง')) {
       console.log('Matched: หน่วยเลือกตั้ง');
@@ -214,143 +539,226 @@ export default function SheetData() {
 
   return (
     <>
-      <div className="w-full w- overflow-x-auto p-2">
-        <h2 className="text-2xl font-bold mb-4">ระบบแสดงผล รายงานก่อนเปิดหีบ</h2>
-        <div className="overflow-x-auto w-full">
-          <table className="w-full border-collapse border border-gray-300 table-fixed">
-            <thead>
-              <tr className="bg-gray-100">
-                {reorderedHeaders.map((header, index) => {
-                  // กำหนดความกว้างตาม index และชื่อ header
-                  let columnWidth: string = '';
-                  
-                  // คอลัมน์ที่ 0: หน่วยเลือกตั้ง
-                  if (index === 0) {
-                    columnWidth = '8.33%';
-                  }
-                  // คอลัมน์ที่ 1: Timestamp
-                  else if (index === 1) {
-                    columnWidth = '8.33%';
-                  }
-                  // คอลัมน์ที่ 2, 3, 4: รูปภาพ (ป้ายไวนิล, แบบ, รายชื่อ)
-                  else if (index >= 2 && index <= 4) {
-                    columnWidth = '25%';
-                  }
-                  // คอลัมน์อื่นๆ
-                  else {
-                    columnWidth = 'auto';
-                  }
-                  
-                  return (
-                    <th
-                      key={header}
-                      className="border border-gray-300 px-3 py-2 text-center font-semibold text-xl"
-                      style={{ width: columnWidth }}
-                    >
-                      {header}
-                    </th>
-                  );
-                })}
-                {/* คอลัมน์ Checkbox - ไว้สุดท้าย */}
-                <th
-                  className="border border-gray-300 px-3 py-2 text-center font-semibold text-xl"
-                  style={{ width: '10%' }}
+      <div className="w-full overflow-x-auto p-4">
+        <div className=" rounded-2xl ">
+          {/* <h2 className="text-3xl font-bold mb-6 text-center text-orange-800 drop-shadow-sm">
+            ระบบแสดงผล รายงานก่อนเปิดหีบํ
+          </h2> */}
+          <div className="w-full space-y-5">
+            {data.map((row, index) => {
+              const isChecked = checkedRows.has(index);
+              const isRejected = rejectedRows.has(index);
+              const unitHeader = reorderedHeaders.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+              const timestampHeader = reorderedHeaders.find(h => h.toLowerCase().includes('timestamp')) || '';
+              const unit = row[unitHeader] || '';
+              const timestamp = row[timestampHeader] || '';
+              
+              // หาคอลัมน์รูปภาพ 3 คอลัมน์ - ใช้ลำดับ index โดยตรงจาก reorderedHeaders
+              // คอลัมน์รูปภาพควรอยู่ที่ index 2, 3, 4 (หลังจาก หน่วยเลือกตั้ง และ Timestamp)
+              // ใช้ลำดับตาม reorderedHeaders เพื่อให้ตรงกับลำดับที่แสดง
+              
+              // หา index ของคอลัมน์รูปภาพ
+              const vinylIndex = reorderedHeaders.findIndex(h => h.includes('ป้ายไวนิล'));
+              const formIndex = reorderedHeaders.findIndex(h => h.includes('แบบ') && !h.includes('รายชื่อ'));
+              const committeeIndex = reorderedHeaders.findIndex(h => (h.includes('รายชื่อ') || h.includes('กรรมการ')) && !h.includes('แบบ'));
+              
+              // ใช้ลำดับ index ถ้าหาไม่เจอ (index 2, 3, 4)
+              const vinylHeader = vinylIndex !== -1 ? reorderedHeaders[vinylIndex] : (reorderedHeaders[2] || '');
+              const formHeader = formIndex !== -1 ? reorderedHeaders[formIndex] : (reorderedHeaders[3] || '');
+              const committeeHeader = committeeIndex !== -1 ? reorderedHeaders[committeeIndex] : (reorderedHeaders[4] || '');
+              
+              // Debug log สำหรับแถวแรก
+              if (index === 0) {
+                console.log('Image headers debug:', {
+                  reorderedHeaders,
+                  vinylIndex,
+                  formIndex,
+                  committeeIndex,
+                  vinyl: vinylHeader,
+                  form: formHeader,
+                  committee: committeeHeader
+                });
+              }
+              
+              // ดึงรูปแรกจากแต่ละคอลัมน์
+              const getFirstImage = (header: string) => {
+                if (!header) return null;
+                const value = row[header] || '';
+                const driveLinks = extractDriveLinks(value);
+                if (driveLinks.length > 0) {
+                  const imageUrl = convertDriveLinkToImageUrl(driveLinks[0]);
+                  return imageUrl;
+                }
+                return null;
+              };
+              
+              const vinylImage = getFirstImage(vinylHeader);
+              const formImage = getFirstImage(formHeader);
+              const committeeImage = getFirstImage(committeeHeader);
+              
+              return (
+                <div
+                  key={index}
+                  className="bg-orange-50 rounded-xl p-6 flex items-center gap-5 shadow-lg border-2 border-orange-200"
                 >
-                  สถานะ
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.map((row, index) => {
-                const isChecked = checkedRows.has(index);
-                return (
-                  <tr key={index} className="hover:bg-gray-50 justify-center">
-                    {reorderedHeaders.map((header) => {
-                    const value = row[header] || '';
-                    // แยกหลาย Google Drive links
-                    const driveLinks = extractDriveLinks(value);
-                    const imageUrls = driveLinks
-                      .map(link => convertDriveLinkToImageUrl(link))
-                      .filter((url): url is string => url !== null);
+                  {/* ปุ่มสีส้มด้านซ้าย */}
+                  <div
+                    style={{ backgroundColor: '#FF6A13' }}
+                    className="rounded-lg px-5 py-4 text-white font-semibold w-[160px] text-center flex items-center justify-center"
+                  >
+                    <div className="text-base wrap-break-word">{unit || 'หน่วย'}</div>
+                  </div>
+                  
+                  {/* Update Time */}
+                  <div className="text-orange-900 font-medium min-w-[140px]">
+                    <div className="text-xs text-orange-600 mb-1">Update Time</div>
+                    <div className="text-sm font-semibold">{timestamp}</div>
+                  </div>
+                  
+                  {/* รูปภาพ 3 ส่วนเท่าๆ กัน */}
+                  <div className="flex items-center gap-3 flex-1 justify-center">
+                    {/* รูปที่ 1: ป้ายไวนิล */}
+                    <div className="flex-1 flex justify-center">
+                      {vinylImage ? (
+                        <div className="relative w-full max-w-[140px]">
+                          {!failedImages.has(vinylImage) ? (
+                            <img
+                              src={vinylImage}
+                              alt="ป้ายไวนิล"
+                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              onClick={() => handleImageClick(vinylImage)}
+                              onError={() => {
+                                setFailedImages(prev => new Set(prev).add(vinylImage));
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                              <span className="text-xs text-gray-500">Error</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
+                        </div>
+                      )}
+                    </div>
                     
-                    return (
-                      <td
-                        key={header}
-                        className="border border-gray-300 px-3 py-2 text-center"
-                      >
-                        {imageUrls.length > 0 ? (
-                          <div className="flex flex-wrap items-center justify-center gap-2">
-                            {imageUrls.map((imageUrl, imgIndex) => {
-                              const fileId = driveLinks[imgIndex]?.match(/[?&]id=([a-zA-Z0-9_-]+)/)?.[1];
-                              const hasFailed = failedImages.has(imageUrl);
-                              
-                              return (
-                                <div key={imgIndex} className="flex flex-col items-center gap-1">
-                                  {!hasFailed ? (
-                                    <img
-                                      src={imageUrl}
-                                      alt={`Image ${imgIndex + 1} from ${header}`}
-                                      className="w-32 h-32 object-cover rounded cursor-pointer hover:opacity-80 transition-opacity border border-gray-300"
-                                      onClick={() => handleImageClick(imageUrl)}
-                                      onError={() => {
-                                        setFailedImages(prev => new Set(prev).add(imageUrl));
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-32 h-32 flex items-center justify-center bg-gray-100 rounded border border-gray-300 text-xs text-gray-500 text-center p-1">
-                                      ไม่สามารถโหลดรูป
-                                    </div>
-                                  )}
-                                  {/* <a
-                                    href={driveLinks[imgIndex]}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-xs text-blue-600 hover:underline"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    เปิดลิงก์
-                                  </a> */}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        ) : value.startsWith('http') ? (
-                          <a
-                            href={value}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:underline break-all"
-                          >
-                            {value}
-                          </a>
-                        ) : (
-                          <span className="wrap-break-word">{value}</span>
-                        )}
-                      </td>
-                    );
-                  })}
-                    {/* คอลัมน์ Checkbox - ไว้สุดท้าย */}
-                    <td className="border border-gray-300 px-3 py-2 text-center">
-                      <div className="flex flex-col items-center gap-2">
+                    {/* รูปที่ 2: แบบ */}
+                    <div className="flex-1 flex justify-center">
+                      {formImage ? (
+                        <div className="relative w-full max-w-[140px]">
+                          {!failedImages.has(formImage) ? (
+                            <img
+                              src={formImage}
+                              alt="แบบ"
+                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              onClick={() => handleImageClick(formImage)}
+                              onError={() => {
+                                setFailedImages(prev => new Set(prev).add(formImage));
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                              <span className="text-xs text-gray-500">Error</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* รูปที่ 3: รายชื่อ */}
+                    <div className="flex-1 flex justify-center">
+                      {committeeImage ? (
+                        <div className="relative w-full max-w-[140px]">
+                          {!failedImages.has(committeeImage) ? (
+                            <img
+                              src={committeeImage}
+                              alt="รายชื่อ"
+                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              onClick={() => handleImageClick(committeeImage)}
+                              onError={() => {
+                                setFailedImages(prev => new Set(prev).add(committeeImage));
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                              <span className="text-xs text-gray-500">Error</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* สถานะตรวจสอบแล้ว */}
+                  <div className="flex items-center gap-2 min-w-[140px]">
+                    {isChecked ? (
+                      <>
+                        <span className="text-orange-900 text-sm font-semibold">ตรวจสอบแล้ว</span>
+                        <div className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-orange-600 text-sm">ยังไม่ได้ตรวจสอบ</span>
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleCheckboxChange(index)}
-                          className="w-5 h-5 cursor-pointer"
+                          className="w-6 h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
                         />
-                        <span className={`text-sm font-medium ${isChecked ? 'text-green-600' : 'text-gray-500'}`}>
-                          {isChecked ? 'ตรวจสอบแล้ว' : 'ยังไม่ได้ตรวจสอบ'}
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-4 text-sm text-gray-600">
-          พบข้อมูลทั้งหมด {data.length} แถว
+                      </>
+                    )}
+                  </div>
+                  
+                  {/* ปุ่ม Reject */}
+                  <button
+                    onClick={() => handleRejectChange(index)}
+                    className={`rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px] ${
+                      isRejected
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
+                    }`}
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span className="text-xs font-medium">Reject</span>
+                  </button>
+                  
+                  {/* ปุ่ม Export */}
+                  <button
+                    onClick={() => handleExport(index, row)}
+                    className="bg-blue-800 hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px]"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <span className="text-xs font-medium">Export</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+          <div className="mt-6 text-center">
+            <div className="inline-block bg-white/80 backdrop-blur-sm px-6 py-3 rounded-xl shadow-md">
+              <span className="text-sm font-semibold text-orange-700">
+                พบข้อมูลทั้งหมด {data.length} แถว
+              </span>
+            </div>
+          </div>
         </div>
       </div>
       
@@ -358,6 +766,19 @@ export default function SheetData() {
         imageUrl={selectedImage}
         isOpen={isModalOpen}
         onClose={closeModal}
+      />
+      
+      <DeleteConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setRowToDelete(null);
+        }}
+        onConfirm={handleConfirmDelete}
+        unitName={rowToDelete !== null ? (() => {
+          const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+          return data[rowToDelete]?.[unitHeader] || '';
+        })() : undefined}
       />
     </>
   );
