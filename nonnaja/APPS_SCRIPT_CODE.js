@@ -1,8 +1,3 @@
-# Google Apps Script Code สำหรับอัปเดตและลบแถว
-
-## โค้ดที่ต้องใช้ใน Google Apps Script
-
-```javascript
 // Function สำหรับ POST request (ใช้จาก API)
 function doPost(e) {
   try {
@@ -101,53 +96,4 @@ function doGet(e) {
     note: 'Use POST request to update sheet data'
   })).setMimeType(ContentService.MimeType.JSON);
 }
-```
-
-## ขั้นตอนการตั้งค่า
-
-1. เปิด Google Sheet
-2. ไปที่ **Extensions** > **Apps Script**
-3. วางโค้ดด้านบนทั้งหมด
-4. **Save** (Ctrl+S)
-5. **Deploy** > **New deployment** หรือ **Manage deployments** > **Edit** > **New version**
-6. เลือก **Web app**
-7. ตั้งค่า:
-   - **Execute as**: "Me"
-   - **Who has access**: **"Anyone"** (สำคัญมาก!)
-8. คลิก **Deploy**
-9. คัดลอก Web App URL
-
-## ทดสอบ
-
-เปิด URL ในเบราว์เซอร์ (GET request):
-```
-https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec
-```
-
-ควรเห็น:
-```json
-{
-  "success": true,
-  "message": "Google Apps Script is working!",
-  "note": "Use POST request to update sheet data"
-}
-```
-
-## Troubleshooting
-
-### Error: "Column not found"
-- ตรวจสอบว่ามีคอลัมน์ "สถานะ" ใน Sheet หรือไม่
-- ชื่อคอลัมน์ต้องตรงกับที่ส่งมา
-
-### Error: "Unknown action"
-- ตรวจสอบว่า Apps Script มี action 'update' และ 'delete' อยู่
-- Deploy ใหม่หลังจากแก้ไขโค้ด
-
-### Error: "Script function not found: doPost"
-- ตรวจสอบว่ามี function `doPost` อยู่
-- Deploy ใหม่
-
-### Error: "Authorization required"
-- ตั้งค่า Web App access เป็น "Anyone"
-- Deploy ใหม่
 

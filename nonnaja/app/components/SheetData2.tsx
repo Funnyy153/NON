@@ -176,7 +176,7 @@ function DeleteConfirmationModal({
   );
 }
 
-export default function SheetData() {
+export default function SheetData2() {
   const [data, setData] = useState<SheetRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -198,7 +198,7 @@ export default function SheetData() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/sheets');
+        const response = await fetch('/api/sheets2');
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
@@ -313,7 +313,7 @@ export default function SheetData() {
         columnName: statusColumn
       });
       
-      const response = await fetch('/api/sheets/update', {
+      const response = await fetch('/api/sheets2/update', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -388,7 +388,7 @@ export default function SheetData() {
 
     try {
       // เรียก API เพื่อลบแถวใน Google Sheet
-      const response = await fetch('/api/sheets/delete', {
+      const response = await fetch('/api/sheets2/delete', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -620,30 +620,40 @@ export default function SheetData() {
               const unit = row[unitHeader] || '';
               const timestamp = row[timestampHeader] || '';
               
-              // หาคอลัมน์รูปภาพ 3 คอลัมน์ - ใช้ลำดับ index โดยตรงจาก reorderedHeaders
-              // คอลัมน์รูปภาพควรอยู่ที่ index 2, 3, 4 (หลังจาก หน่วยเลือกตั้ง และ Timestamp)
-              // ใช้ลำดับตาม reorderedHeaders เพื่อให้ตรงกับลำดับที่แสดง
+              // หาคอลัมน์รูปภาพ 6 คอลัมน์ (แบบ 5/4, 5/6, 5/7 ของนายกฯ และสมาชิก อบต.)
+              // หาคอลัมน์ทั้งหมดที่มี "แบบ"
+              const formHeaders = reorderedHeaders.filter(h => h.includes('แบบ'));
               
-              // หา index ของคอลัมน์รูปภาพ
-              const vinylIndex = reorderedHeaders.findIndex(h => h.includes('ป้ายไวนิล'));
-              const formIndex = reorderedHeaders.findIndex(h => h.includes('แบบ') && !h.includes('รายชื่อ'));
-              const committeeIndex = reorderedHeaders.findIndex(h => (h.includes('รายชื่อ') || h.includes('กรรมการ')) && !h.includes('แบบ'));
+              // แยกเป็นของนายกฯ และสมาชิก อบต.
+              const pmForm54 = formHeaders.find(h => h.includes('5/4') && h.includes('นายก'));
+              const pmForm56 = formHeaders.find(h => h.includes('5/6') && h.includes('นายก'));
+              const pmForm57 = formHeaders.find(h => h.includes('5/7') && h.includes('นายก'));
+              const memberForm54 = formHeaders.find(h => h.includes('5/4') && (h.includes('สมาชิก') || h.includes('อบต')));
+              const memberForm56 = formHeaders.find(h => h.includes('5/6') && (h.includes('สมาชิก') || h.includes('อบต')));
+              const memberForm57 = formHeaders.find(h => h.includes('5/7') && (h.includes('สมาชิก') || h.includes('อบต')));
               
-              // ใช้ลำดับ index ถ้าหาไม่เจอ (index 2, 3, 4)
-              const vinylHeader = vinylIndex !== -1 ? reorderedHeaders[vinylIndex] : (reorderedHeaders[2] || '');
-              const formHeader = formIndex !== -1 ? reorderedHeaders[formIndex] : (reorderedHeaders[3] || '');
-              const committeeHeader = committeeIndex !== -1 ? reorderedHeaders[committeeIndex] : (reorderedHeaders[4] || '');
+              // ถ้าหาไม่เจอ ให้ใช้ลำดับตาม index
+              const allFormHeaders = [
+                pmForm54 || formHeaders[0] || '',
+                pmForm56 || formHeaders[1] || '',
+                pmForm57 || formHeaders[2] || '',
+                memberForm54 || formHeaders[3] || '',
+                memberForm56 || formHeaders[4] || '',
+                memberForm57 || formHeaders[5] || ''
+              ];
               
               // Debug log สำหรับแถวแรก
               if (index === 0) {
-                console.log('Image headers debug:', {
+                console.log('Image headers debug (Sheet2):', {
                   reorderedHeaders,
-                  vinylIndex,
-                  formIndex,
-                  committeeIndex,
-                  vinyl: vinylHeader,
-                  form: formHeader,
-                  committee: committeeHeader
+                  formHeaders,
+                  pmForm54,
+                  pmForm56,
+                  pmForm57,
+                  memberForm54,
+                  memberForm56,
+                  memberForm57,
+                  allFormHeaders
                 });
               }
               
@@ -659,9 +669,8 @@ export default function SheetData() {
                 return null;
               };
               
-              const vinylImage = getFirstImage(vinylHeader);
-              const formImage = getFirstImage(formHeader);
-              const committeeImage = getFirstImage(committeeHeader);
+              // ดึงรูปทั้ง 6 รูป
+              const images = allFormHeaders.map(header => getFirstImage(header));
               
               return (
                 <div
@@ -682,88 +691,46 @@ export default function SheetData() {
                     <div className="text-sm font-semibold">{timestamp}</div>
                   </div>
                   
-                  {/* รูปภาพ 3 ส่วนเท่าๆ กัน */}
-                  <div className="flex items-center gap-3 flex-1 justify-center">
-                    {/* รูปที่ 1: ป้ายไวนิล */}
-                    <div className="flex-1 flex justify-center">
-                      {vinylImage ? (
-                        <div className="relative w-full max-w-[140px]">
-                          {!failedImages.has(vinylImage) ? (
-                            <img
-                              src={vinylImage}
-                              alt="ป้ายไวนิล"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
-                              onClick={() => handleImageClick(vinylImage)}
-                              onError={() => {
-                                setFailedImages(prev => new Set(prev).add(vinylImage));
-                              }}
-                            />
+                  {/* รูปภาพ 6 ส่วนในแถวเดียวกัน */}
+                  <div className="flex-1 flex items-center gap-2 justify-center">
+                    {images.map((image, imgIndex) => {
+                      const labels = [
+                        'แบบ 5/4 (นายกฯ)',
+                        'แบบ 5/6 (นายกฯ)',
+                        'แบบ 5/7 (นายกฯ)',
+                        'แบบ 5/4 (อบต.)',
+                        'แบบ 5/6 (อบต.)',
+                        'แบบ 5/7 (อบต.)'
+                      ];
+                      
+                      return (
+                        <div key={imgIndex} className="flex-1 flex justify-center max-w-[110px]">
+                          {image ? (
+                            <div className="relative w-full">
+                              {!failedImages.has(image) ? (
+                                <img
+                                  src={image}
+                                  alt={labels[imgIndex] || `รูป ${imgIndex + 1}`}
+                                  className="w-full h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                                  onClick={() => handleImageClick(image)}
+                                  onError={() => {
+                                    setFailedImages(prev => new Set(prev).add(image));
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                                  <span className="text-xs text-gray-500">Error</span>
+                                </div>
+                              )}
+                            </div>
                           ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">Error</span>
+                            <div className="w-full h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                              <span className="text-xs text-gray-400">ไม่มีรูป</span>
                             </div>
                           )}
                         </div>
-                      ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* รูปที่ 2: แบบ */}
-                    <div className="flex-1 flex justify-center">
-                      {formImage ? (
-                        <div className="relative w-full max-w-[140px]">
-                          {!failedImages.has(formImage) ? (
-                            <img
-                              src={formImage}
-                              alt="แบบ"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
-                              onClick={() => handleImageClick(formImage)}
-                              onError={() => {
-                                setFailedImages(prev => new Set(prev).add(formImage));
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">Error</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* รูปที่ 3: รายชื่อ */}
-                    <div className="flex-1 flex justify-center">
-                      {committeeImage ? (
-                        <div className="relative w-full max-w-[140px]">
-                          {!failedImages.has(committeeImage) ? (
-                            <img
-                              src={committeeImage}
-                              alt="รายชื่อ"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
-                              onClick={() => handleImageClick(committeeImage)}
-                              onError={() => {
-                                setFailedImages(prev => new Set(prev).add(committeeImage));
-                              }}
-                            />
-                          ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                              <span className="text-xs text-gray-500">Error</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
-                          <span className="text-xs text-gray-400">ไม่มีรูป</span>
-                        </div>
-                      )}
-                    </div>
+                      );
+                    })}
                   </div>
                   
                   {/* สถานะตรวจสอบแล้ว */}

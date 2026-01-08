@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 
-// Sheet ID และ GID จาก URL ที่คุณให้มา
-const SHEET_ID = '1vctOoJm4pLcbNfh6PRPNAQI3pW_GKPw3Sy3eoMqBh38';
-const GID = '44722663';
+// Sheet ID และ GID จาก URL สำหรับหน้า after
+const SHEET_ID = '1wl4cnLPCunVzzzzm6RsxOXsaJC3fS-Fu-7ZKrCCks3A';
+const GID = '598449528';
 
 export async function GET() {
   try {
@@ -111,12 +111,6 @@ export async function GET() {
       });
       return rowData;
     });
-    
-    // ไม่กรองแถวใดๆ ออก ให้แสดงทุกแถว (รวมแถวที่ว่างเปล่าด้วย)
-    // แต่ถ้าต้องการกรองแถวที่ว่างเปล่าทั้งหมดจริงๆ ให้ใช้โค้ดด้านล่าง
-    // .filter((row: Record<string, string>) => {
-    //   return Object.values(row).some(val => String(val).trim() !== '');
-    // });
     
     console.log(`Found ${rows.length} rows, ${headers.length} columns`);
     console.log(`Headers:`, headers);
