@@ -1,7 +1,7 @@
 import SheetData from "../../components/SheetData";
 import Navbar from "../../components/Navbar";
 
-export default function BeforePage() {
+export default function AfterPage() {
   return (
     <>
       <Navbar />
