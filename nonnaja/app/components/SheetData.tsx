@@ -63,13 +63,14 @@ function ImageModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
       onClick={onClose}
     >
       <div className="relative max-w-7xl max-h-full">
         <button
           onClick={onClose}
-          className="absolute -top-10 right-0 text-white text-2xl font-bold hover:text-gray-300 transition-colors"
+          className="absolute -top-10 right-0 text-gray-800 text-2xl font-bold hover:text-gray-600 transition-colors bg-white bg-opacity-90 rounded-full w-10 h-10 flex items-center justify-center shadow-lg border border-gray-300"
           aria-label="Close"
         >
           ✕
@@ -77,7 +78,7 @@ function ImageModal({
         <img
           src={imageUrl}
           alt="Expanded view"
-          className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+          className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl bg-white p-2"
           onClick={(e) => e.stopPropagation()}
         />
       </div>
@@ -92,6 +93,7 @@ export default function SheetData() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+  const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     async function fetchData() {
@@ -160,6 +162,18 @@ export default function SheetData() {
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedImage(null);
+  };
+
+  const handleCheckboxChange = (rowIndex: number) => {
+    setCheckedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowIndex)) {
+        newSet.delete(rowIndex);
+      } else {
+        newSet.add(rowIndex);
+      }
+      return newSet;
+    });
   };
 
   // ฟังก์ชันกำหนดความกว้างของคอลัมน์ตามชื่อ (return เป็น style object)
@@ -237,12 +251,21 @@ export default function SheetData() {
                     </th>
                   );
                 })}
+                {/* คอลัมน์ Checkbox - ไว้สุดท้าย */}
+                <th
+                  className="border border-gray-300 px-3 py-2 text-center font-semibold text-xl"
+                  style={{ width: '10%' }}
+                >
+                  สถานะ
+                </th>
               </tr>
             </thead>
             <tbody>
-              {data.map((row, index) => (
-                <tr key={index} className="hover:bg-gray-50 justify-center">
-                  {reorderedHeaders.map((header) => {
+              {data.map((row, index) => {
+                const isChecked = checkedRows.has(index);
+                return (
+                  <tr key={index} className="hover:bg-gray-50 justify-center">
+                    {reorderedHeaders.map((header) => {
                     const value = row[header] || '';
                     // แยกหลาย Google Drive links
                     const driveLinks = extractDriveLinks(value);
@@ -306,8 +329,23 @@ export default function SheetData() {
                       </td>
                     );
                   })}
-                </tr>
-              ))}
+                    {/* คอลัมน์ Checkbox - ไว้สุดท้าย */}
+                    <td className="border border-gray-300 px-3 py-2 text-center">
+                      <div className="flex flex-col items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleCheckboxChange(index)}
+                          className="w-5 h-5 cursor-pointer"
+                        />
+                        <span className={`text-sm font-medium ${isChecked ? 'text-green-600' : 'text-gray-500'}`}>
+                          {isChecked ? 'ตรวจสอบแล้ว' : 'ยังไม่ได้ตรวจสอบ'}
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
