@@ -11,27 +11,73 @@ interface SheetRow {
 // ฟังก์ชันแปลง Google Drive link เป็น image URL
 function convertDriveLinkToImageUrl(driveUrl: string): string | null {
   try {
-    // ดึง file ID จาก Google Drive URL
-    // รูปแบบ: https://drive.google.com/open?id=FILE_ID
-    const match = driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (match && match[1]) {
-      const fileId = match[1];
-      // ใช้ thumbnail URL ซึ่งทำงานได้ดีกว่าสำหรับ public files
-      // https://drive.google.com/thumbnail?id=FILE_ID&sz=w1000
+    if (!driveUrl || typeof driveUrl !== 'string') {
+      return null;
+    }
+    
+    // ลบ whitespace และ trim
+    let cleanUrl = driveUrl.trim();
+    
+    // ลบ query parameters ที่ไม่จำเป็น (เช่น usp=sharing)
+    cleanUrl = cleanUrl.split('&usp=')[0].split('?usp=')[0];
+    
+    // รองรับหลายรูปแบบของ Google Drive URL:
+    // 1. https://drive.google.com/open?id=FILE_ID
+    // 2. https://drive.google.com/file/d/FILE_ID/view
+    // 3. https://drive.google.com/file/d/FILE_ID/edit
+    // 4. https://drive.google.com/uc?id=FILE_ID
+    // 5. https://docs.google.com/document/d/FILE_ID/edit (Google Docs)
+    // 6. https://drive.google.com/file/d/FILE_ID/view?usp=sharing
+    
+    let fileId: string | null = null;
+    
+    // รูปแบบ 1: ?id=FILE_ID หรือ &id=FILE_ID
+    const match1 = cleanUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    if (match1 && match1[1]) {
+      fileId = match1[1];
+    }
+    
+    // รูปแบบ 2: /file/d/FILE_ID/ หรือ /document/d/FILE_ID/ หรือ /spreadsheets/d/FILE_ID/
+    if (!fileId) {
+      const match2 = cleanUrl.match(/\/(?:file|document|spreadsheets|presentation)\/d\/([a-zA-Z0-9_-]+)/);
+      if (match2 && match2[1]) {
+        fileId = match2[1];
+      }
+    }
+    
+    // รูปแบบ 3: /thumbnail?id=FILE_ID (ถ้ามีอยู่แล้ว)
+    if (!fileId) {
+      const match3 = cleanUrl.match(/\/thumbnail\?id=([a-zA-Z0-9_-]+)/);
+      if (match3 && match3[1]) {
+        fileId = match3[1];
+      }
+    }
+    
+    // รูปแบบ 4: /uc?export=view&id=FILE_ID
+    if (!fileId) {
+      const match4 = cleanUrl.match(/\/uc\?[^&]*id=([a-zA-Z0-9_-]+)/);
+      if (match4 && match4[1]) {
+        fileId = match4[1];
+      }
+    }
+    
+    if (fileId) {
       return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
+    
+    console.warn('Could not extract file ID from Google Drive URL:', cleanUrl);
     return null;
-  } catch {
+  } catch (error) {
+    console.error('Error converting Drive link to image URL:', error, driveUrl);
     return null;
   }
 }
 
 // ฟังก์ชันแยกหลาย Google Drive links จาก text
 function extractDriveLinks(text: string): string[] {
-  // หา Google Drive URLs ทั้งหมดใน text
-  const urlPattern = /https?:\/\/drive\.google\.com\/[^\s]+/g;
-  const matches = text.match(urlPattern);
-  return matches || [];
+  return text && typeof text === 'string' 
+    ? text.match(/https?:\/\/(?:drive|docs)\.google\.com\/[^\s<>"']+/g) || []
+    : [];
 }
 
 // Modal component สำหรับแสดงรูปขยาย
@@ -551,58 +597,99 @@ export default function SheetData3() {
   const [showClosedCases, setShowClosedCases] = useState(true);
   const [closedRows, setClosedRows] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const result = await fetchSheetData('sheets3');
-        setData(result.data);
+  // ฟังก์ชันสำหรับ fetch และ process ข้อมูล
+  const fetchAndProcessData = async (isInitialLoad = false) => {
+    try {
+      if (isInitialLoad) {
+        setLoading(true);
+      }
+      
+      const result = await fetchSheetData('sheets3');
+      const rawData = result.data;
+      
+      // เปรียบเทียบกับข้อมูลเดิมเพื่อดูว่ามีข้อมูลใหม่หรือไม่
+      const currentDataLength = data.length;
+      const hasNewData = rawData && rawData.length > currentDataLength;
+      
+      setData(rawData);
+      
+      // โหลดสถานะ "ตรวจสอบแล้ว" และ "ปิดเคส" จาก Sheet
+      // หา column "สถานะ" และ "ปิดเคส" จาก headers
+      if (rawData && rawData.length > 0) {
+        const headers = Object.keys(rawData[0]);
+        const statusColumn = headers.find(h => 
+          h && (h.includes('สถานะ') || h.toLowerCase().includes('status'))
+        );
+        const closeCaseColumn = headers.find(h => 
+          h && (h.includes('ปิดเคส') || h.includes('ปิด'))
+        );
         
-        // โหลดสถานะ "ตรวจสอบแล้ว" และ "ปิดเคส" จาก Sheet
-        // หา column "สถานะ" และ "ปิดเคส" จาก headers
-        if (result.data && result.data.length > 0) {
-          const headers = Object.keys(result.data[0]);
-          const statusColumn = headers.find(h => 
-            h && (h.includes('สถานะ') || h.toLowerCase().includes('status'))
-          );
-          const closeCaseColumn = headers.find(h => 
-            h && (h.includes('ปิดเคส') || h.includes('ปิด'))
-          );
+        if (statusColumn) {
+          const checkedIndices = new Set<number>();
+          rawData.forEach((row: SheetRow, index: number) => {
+            const statusValue = row[statusColumn];
+            // ถ้าค่าเป็น "1" หรือ "1.0" หรือ "ตรวจสอบแล้ว" ให้ mark เป็น checked
+            if (statusValue === '1' || statusValue === '1.0' || statusValue === 'ตรวจสอบแล้ว') {
+              checkedIndices.add(index);
+            }
+          });
+          setCheckedRows(checkedIndices);
           
-          if (statusColumn) {
-            const checkedIndices = new Set<number>();
-            result.data.forEach((row: SheetRow, index: number) => {
-              const statusValue = row[statusColumn];
-              // ถ้าค่าเป็น "1" หรือ "1.0" หรือ "ตรวจสอบแล้ว" ให้ mark เป็น checked
-              if (statusValue === '1' || statusValue === '1.0' || statusValue === 'ตรวจสอบแล้ว') {
-                checkedIndices.add(index);
-              }
-            });
-            setCheckedRows(checkedIndices);
+          if (isInitialLoad) {
             console.log('Loaded checked rows from Sheet:', checkedIndices.size);
+          } else if (hasNewData) {
+            console.log('New data detected! Updated from', currentDataLength, 'to', rawData.length, 'rows');
           }
+        }
 
-          if (closeCaseColumn) {
-            const closedIndices = new Set<number>();
-            result.data.forEach((row: SheetRow, index: number) => {
-              const closeCaseValue = row[closeCaseColumn];
-              // ถ้าค่าเป็น "1" หรือ "1.0" ให้ mark เป็น closed
-              if (closeCaseValue === '1' || closeCaseValue === '1.0') {
-                closedIndices.add(index);
-              }
-            });
-            setClosedRows(closedIndices);
+        if (closeCaseColumn) {
+          const closedIndices = new Set<number>();
+          rawData.forEach((row: SheetRow, index: number) => {
+            const closeCaseValue = row[closeCaseColumn];
+            // ถ้าค่าเป็น "1" หรือ "1.0" ให้ mark เป็น closed
+            if (closeCaseValue === '1' || closeCaseValue === '1.0') {
+              closedIndices.add(index);
+            }
+          });
+          setClosedRows(closedIndices);
+          
+          if (isInitialLoad) {
             console.log('Loaded closed rows from Sheet:', closedIndices.size);
           }
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'เกิดข้อผิดพลาด');
-      } finally {
+      }
+      
+      if (isInitialLoad) {
+        setError(null);
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'เกิดข้อผิดพลาด';
+      if (isInitialLoad) {
+        setError(errorMessage);
+      } else {
+        // ถ้าไม่ใช่ initial load ให้ log error แต่ไม่แสดง error state
+        console.error('Error fetching data (auto-refresh):', errorMessage);
+      }
+    } finally {
+      if (isInitialLoad) {
         setLoading(false);
       }
     }
+  };
 
-    fetchData();
+  // Initial fetch
+  useEffect(() => {
+    fetchAndProcessData(true);
   }, []);
+
+  // Auto-refresh every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchAndProcessData(false);
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [data]); // Include data in dependencies to use latest state
 
   if (loading) {
     return (
@@ -932,44 +1019,73 @@ export default function SheetData3() {
     }
   };
 
-  // Filter data based on search term, status filters, and close case filters
-  const filteredData = data.filter((row, index) => {
-    // Filter by search term (หน่วยเลือกตั้ง)
-    const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
-    const unit = row[unitHeader] || '';
-    const matchesSearch = !searchTerm || unit.toLowerCase().includes(searchTerm.toLowerCase());
+  // Helper function to calculate card color value
+  const getCardColorValue = (row: SheetRow, rowIndex: number): string => {
+    const statusHeader = headers.find(h => h.includes('สถานะ') || h.toLowerCase().includes('status')) || '';
+    const closeCaseHeader = headers.find(h => h.includes('ปิดเคส') || h.includes('ปิด')) || '';
+    const colorHeader = headers.find(h => h.includes('สี') || h.toLowerCase().includes('color')) || '';
     
-    // Filter by status
-    const isChecked = checkedRows.has(index);
-    const matchesStatus = (isChecked && statusFilters.checked) || (!isChecked && statusFilters.unchecked);
+    const status = row[statusHeader] || '0';
+    const closeCase = row[closeCaseHeader] || '0';
+    const colorValue = row[colorHeader] || '';
     
-    // Filter by close case (ถ้า showClosedCases = false ให้ซ่อนแถวที่ปิดเคสแล้ว)
-    const isClosed = closedRows.has(index);
-    const matchesCloseCase = showClosedCases || !isClosed;
-    
-    return matchesSearch && matchesStatus && matchesCloseCase;
-  }).reverse(); // เรียงลำดับจากล่างขึ้นบน (ข้อมูลใหม่สุดอยู่บน)
-
-  // Create a mapping from filtered index to original index (เรียงจากล่างขึ้นบน)
-  const originalIndexMap = new Map<number, number>();
-  let filteredIndex = 0;
-  // วนลูปจากท้ายไปหน้า (reverse order) เพื่อให้ข้อมูลใหม่สุดอยู่บน
-  for (let i = data.length - 1; i >= 0; i--) {
-    const row = data[i];
-    const originalIndex = i;
-    const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
-    const unit = row[unitHeader] || '';
-    const matchesSearch = !searchTerm || unit.toLowerCase().includes(searchTerm.toLowerCase());
-    const isChecked = checkedRows.has(originalIndex);
-    const matchesStatus = (isChecked && statusFilters.checked) || (!isChecked && statusFilters.unchecked);
-    const isClosed = closedRows.has(originalIndex);
-    const matchesCloseCase = showClosedCases || !isClosed;
-    
-    if (matchesSearch && matchesStatus && matchesCloseCase) {
-      originalIndexMap.set(filteredIndex, originalIndex);
-      filteredIndex++;
+    // ถ้ามีค่าใน Sheet ใช้ค่าใน Sheet
+    if (colorValue && (colorValue === '0' || colorValue === '1' || colorValue === '2')) {
+      return colorValue;
     }
-  }
+    
+    // คำนวณจากสถานะและปิดเคส
+    if (closeCase === '1' || closeCase === '1.0') {
+      return '2'; // เขียว
+    } else if (status === '1' || status === '1.0') {
+      return '1'; // ขาว
+    } else {
+      return '0'; // ส้ม
+    }
+  };
+
+  // Filter and sort data by color: ส้ม (0) → ขาว (1) → เขียว (2)
+  // Within each color group, sort by newest first (higher index = newer)
+  const filteredDataWithIndex = data
+    .map((row, index) => ({ row, index }))
+    .filter(({ row, index }) => {
+      // Filter by search term (หน่วยเลือกตั้ง)
+      const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+      const unit = row[unitHeader] || '';
+      const matchesSearch = !searchTerm || unit.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filter by status
+      const isChecked = checkedRows.has(index);
+      const matchesStatus = (isChecked && statusFilters.checked) || (!isChecked && statusFilters.unchecked);
+      
+      // Filter by close case (ถ้า showClosedCases = false ให้ซ่อนแถวที่ปิดเคสแล้ว)
+      const isClosed = closedRows.has(index);
+      const matchesCloseCase = showClosedCases || !isClosed;
+      
+      return matchesSearch && matchesStatus && matchesCloseCase;
+    })
+    .map(({ row, index }) => ({
+      row,
+      index,
+      colorValue: getCardColorValue(row, index)
+    }))
+    .sort((a, b) => {
+      // เรียงตามสี: ส้ม (0) → ขาว (1) → เขียว (2)
+      const colorOrder = parseInt(a.colorValue) - parseInt(b.colorValue);
+      if (colorOrder !== 0) {
+        return colorOrder;
+      }
+      // ในแต่ละสี เรียงจากใหม่สุดไปเก่าสุด (index สูงสุดก่อน)
+      return b.index - a.index;
+    });
+
+  const filteredData = filteredDataWithIndex.map(item => item.row);
+
+  // Create a mapping from filtered index to original index
+  const originalIndexMap = new Map<number, number>();
+  filteredDataWithIndex.forEach((item, filteredIdx) => {
+    originalIndexMap.set(filteredIdx, item.index);
+  });
 
   return (
     <>
@@ -1119,7 +1235,7 @@ export default function SheetData3() {
                   </div>
                   
                   {/* ปุ่ม Reject และ Detail */}
-                  <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
+                  <div className="flex flex-row gap-2 w-full sm:w-auto">
                   {/* ปุ่ม Reject */}
                   <button
                     onClick={() => handleRejectChange(index)}
