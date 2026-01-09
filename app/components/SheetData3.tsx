@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import FilterBar from './FilterBar';
+import { fetchSheetData, updateSheetData, deleteSheetRow } from '../lib/sheetsApi';
 
 interface SheetRow {
   [key: string]: string;
@@ -15,8 +16,9 @@ function convertDriveLinkToImageUrl(driveUrl: string): string | null {
     const match = driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
       const fileId = match[1];
-      // ใช้ API route ของเราเพื่อดึงรูปภาพ (รองรับ private files)
-      return `/api/drive-image?id=${fileId}`;
+      // ใช้ thumbnail URL ซึ่งทำงานได้ดีกว่าสำหรับ public files
+      // https://drive.google.com/thumbnail?id=FILE_ID&sz=w1000
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
     return null;
   } catch {
@@ -214,32 +216,32 @@ function DetailModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div
-          className="sticky top-0 rounded-t-2xl px-6 py-4 flex items-center justify-between z-20"
+          className="sticky top-0 rounded-t-xl sm:rounded-t-2xl px-3 py-3 sm:px-6 sm:py-4 flex items-center justify-between z-20"
           style={{ backgroundColor: '#FF6A13' }}
         >
-          <h2 className="text-2xl font-bold text-white">รายละเอียดเหตุการณ์</h2>
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white">รายละเอียดเหตุการณ์</h2>
           <button
             onClick={onClose}
             className="text-white hover:text-orange-200 transition-colors"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-4 relative z-0">
+        <div className="p-3 sm:p-4 md:p-6 space-y-3 sm:space-y-4 relative z-0">
           {/* หน่วยเลือกตั้ง */}
           {unit && (
             <div>
@@ -283,14 +285,14 @@ function DetailModal({
           {/* ภาพเหตุการณ์และหลักฐาน */}
           {images.length > 0 && (
             <div>
-              <div className="text-sm font-semibold text-orange-600 mb-2">ภาพเหตุการณ์และหลักฐาน</div>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="text-xs sm:text-sm font-semibold text-orange-600 mb-2">ภาพเหตุการณ์และหลักฐาน</div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 {images.map((image, imgIndex) => (
                   <div key={imgIndex} className="relative">
                     <img
                       src={image}
                       alt={`รูป ${imgIndex + 1}`}
-                      className="w-full h-48 object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md hover:shadow-lg transition-shadow"
+                      className="w-full h-32 sm:h-40 md:h-48 object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md hover:shadow-lg transition-shadow"
                       onClick={() => onImageClick(image)}
                     />
                   </div>
@@ -325,15 +327,15 @@ function DetailModal({
 
           {/* ตรวจสอบแล้ว / ปิดเคส */}
           <div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
               {/* ตรวจสอบแล้ว */}
               {statusHeader && (
                 <div className="flex items-center gap-2">
                   {isCheckedStatus ? (
                     <>
-                      <span className="text-orange-900 text-sm font-semibold">ตรวจสอบแล้ว</span>
+                      <span className="text-orange-900 text-xs sm:text-sm font-semibold">ตรวจสอบแล้ว</span>
                       <div 
-                        className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
+                        className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
                         onClick={async () => {
                           try {
                             setIsCheckedStatus(false);
@@ -345,14 +347,14 @@ function DetailModal({
                           }
                         }}
                       >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-orange-600 text-sm">ยังไม่ได้ตรวจสอบ</span>
+                      <span className="text-orange-600 text-xs sm:text-sm">ยังไม่ได้ตรวจสอบ</span>
                       <input
                         type="checkbox"
                         checked={isCheckedStatus}
@@ -366,7 +368,7 @@ function DetailModal({
                             setIsCheckedStatus(!e.target.checked); // Revert on error
                           }
                         }}
-                        className="w-6 h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
+                        className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
                       />
                     </>
                   )}
@@ -378,9 +380,9 @@ function DetailModal({
                 <div className="flex items-center gap-2">
                   {isClosingCase ? (
                     <>
-                      <span className="text-orange-900 text-sm font-semibold">ปิดเคส</span>
+                      <span className="text-orange-900 text-xs sm:text-sm font-semibold">ปิดเคส</span>
                       <div 
-                        className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
+                        className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
                         onClick={async () => {
                           try {
                             setIsClosingCase(false);
@@ -391,19 +393,19 @@ function DetailModal({
                           }
                         }}
                       >
-                        <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       </div>
                     </>
                   ) : (
                     <>
-                      <span className="text-orange-600 text-sm">ปิดเคส</span>
+                      <span className="text-orange-600 text-xs sm:text-sm">ปิดเคส</span>
                       <input
                         type="checkbox"
                         checked={isClosingCase}
                         onChange={handleCloseCaseChange}
-                        className="w-6 h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
+                        className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
                       />
                     </>
                   )}
@@ -414,10 +416,10 @@ function DetailModal({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 px-6 py-4 border-t border-orange-200 bg-white rounded-b-2xl">
+        <div className="sticky bottom-0 px-3 py-3 sm:px-6 sm:py-4 border-t border-orange-200 bg-white rounded-b-xl sm:rounded-b-2xl">
           <button
             onClick={onClose}
-            className="w-full py-2 px-4 rounded-lg font-semibold text-white transition-colors"
+            className="w-full py-2 px-4 rounded-lg font-semibold text-sm sm:text-base text-white transition-colors"
             style={{ backgroundColor: '#FF6A13' }}
             onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e55a0f'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF6A13'}
@@ -552,11 +554,7 @@ export default function SheetData3() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/sheets3');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const result = await response.json();
+        const result = await fetchSheetData('sheets3');
         setData(result.data);
         
         // โหลดสถานะ "ตรวจสอบแล้ว" และ "ปิดเคส" จาก Sheet
@@ -663,11 +661,7 @@ export default function SheetData3() {
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // ดึงข้อมูลล่าสุดจาก Sheet
-      const fetchResponse = await fetch('/api/sheets3');
-      if (!fetchResponse.ok) {
-        throw new Error('Failed to fetch updated data');
-      }
-      const fetchResult = await fetchResponse.json();
+      const fetchResult = await fetchSheetData('sheets3');
       
       // อัปเดต data state ด้วยข้อมูลล่าสุด
       if (fetchResult.data && fetchResult.data[rowIndex]) {
@@ -705,19 +699,9 @@ export default function SheetData3() {
       }
 
       // อัปเดตค่าใน Sheet
-      const updateResponse = await fetch('/api/sheets3/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex,
-          value: newColorValue,
-          columnName: colorHeader
-        }),
-      });
-
-      if (updateResponse.ok) {
+      try {
+        await updateSheetData('sheets3', rowIndex, colorHeader, newColorValue);
+        
         // อัปเดตข้อมูลใน state
         setData(prevData => {
           const newData = [...prevData];
@@ -734,6 +718,8 @@ export default function SheetData3() {
             return { ...prev, [colorHeader]: newColorValue };
           });
         }
+      } catch (error) {
+        console.error('Error updating card color:', error);
       }
     } catch (error) {
       console.error('Error updating card color:', error);
@@ -768,35 +754,8 @@ export default function SheetData3() {
         columnName: statusColumn
       });
       
-      const response = await fetch('/api/sheets3/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex, // 0-based index ของ data array
-          value: newCheckedState ? '1' : '0', // ติ๊ก = '1', ไม่ติ๊ก = '0'
-          columnName: statusColumn
-        }),
-      });
-      
-      console.log('Update response status:', response.status);
-      
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-          console.error('Update error data:', errorData);
-        } catch {
-          const responseText = await response.text();
-          console.error('Update error response text:', responseText);
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}`, details: responseText };
-        }
-        throw new Error(errorData.error || errorData.message || 'Failed to update sheet');
-      }
-      
-      const result = await response.json();
-      console.log('Sheet updated successfully:', result);
+      await updateSheetData('sheets3', rowIndex, statusColumn, newCheckedState ? '1' : '0');
+      console.log('Sheet updated successfully');
 
       // อัปเดตข้อมูลใน state
       setData(prevData => {
@@ -831,22 +790,19 @@ export default function SheetData3() {
       });
       
       let errorMessage = 'ไม่ทราบสาเหตุ';
-      let errorDetails = '';
       
       if (error instanceof Error) {
         errorMessage = error.message;
-        // ลอง parse error message เพื่อดู details
-        try {
-          const errorMatch = error.message.match(/details[:\s]+(.+)/i);
-          if (errorMatch) {
-            errorDetails = errorMatch[1];
-          }
-        } catch {}
       }
       
-      const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}${errorDetails ? '\n\nรายละเอียด: ' + errorDetails : ''}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log สำหรับรายละเอียดเพิ่มเติม`;
-      
-      alert(fullMessage);
+      // ถ้าเป็น "Failed to fetch" ให้แสดงคำแนะนำเพิ่มเติม
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ไม่สามารถเชื่อมต่อ')) {
+        const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access (ไม่ใช่ "Only myself")\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ตรวจสอบ network connection\n5. ดู console log (F12) สำหรับรายละเอียดเพิ่มเติม`;
+        alert(fullMessage);
+      } else {
+        const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log (F12) สำหรับรายละเอียดเพิ่มเติม`;
+        alert(fullMessage);
+      }
     }
   };
 
@@ -858,30 +814,8 @@ export default function SheetData3() {
 
   const handleDataUpdate = async (rowIndex: number, columnName: string, value: string) => {
     try {
-      const response = await fetch('/api/sheets3/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex,
-          value: value,
-          columnName: columnName
-        }),
-      });
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
-        }
-        throw new Error(errorData.error || errorData.message || 'Failed to update sheet');
-      }
-
-      const result = await response.json();
-      console.log('Data updated successfully:', result);
+      await updateSheetData('sheets3', rowIndex, columnName, value);
+      console.log('Data updated successfully');
 
       // อัปเดตข้อมูลใน state
       setData(prevData => {
@@ -955,28 +889,8 @@ export default function SheetData3() {
 
     try {
       // เรียก API เพื่อลบแถวใน Google Sheet
-      const response = await fetch('/api/sheets3/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex, // 0-based index ของ data array
-        }),
-      });
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
-        }
-        throw new Error(errorData.error || errorData.message || 'Failed to delete row');
-      }
-
-      const result = await response.json();
-      console.log('Row deleted:', result);
+      await deleteSheetRow('sheets3', rowIndex);
+      console.log('Row deleted successfully');
 
       // ลบการ์ดออกจาก state (ลบข้อมูลออกจาก array)
       setData(prevData => prevData.filter((_, index) => index !== rowIndex));
@@ -1059,7 +973,7 @@ export default function SheetData3() {
 
   return (
     <>
-      <div className="w-full overflow-x-auto p-4">
+      <div className="w-full overflow-x-auto p-2 sm:p-4">
         <div className=" rounded-2xl ">
           {/* Filter Bar */}
           <FilterBar
@@ -1069,7 +983,7 @@ export default function SheetData3() {
             onCloseCaseFilterChange={setShowClosedCases}
           />
           
-          <div className="w-full space-y-5">
+          <div className="w-full space-y-3 sm:space-y-5">
             {filteredData.map((row, filteredIdx) => {
               const index = originalIndexMap.get(filteredIdx) ?? filteredIdx;
               const isChecked = checkedRows.has(index);
@@ -1130,47 +1044,47 @@ export default function SheetData3() {
               return (
                 <div
                   key={index}
-                  className={`${cardColor} rounded-xl p-6 flex items-center gap-5 shadow-lg border-2 ${cardBorder}`}
+                  className={`${cardColor} rounded-xl p-3 sm:p-4 md:p-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 md:gap-5 shadow-lg border-2 ${cardBorder}`}
                 >
                   {/* ปุ่มสีส้มด้านซ้าย */}
                   <div
                     style={{ backgroundColor: '#FF6A13' }}
-                    className="rounded-lg px-5 py-4 text-white font-semibold w-[160px] text-center flex items-center justify-center"
+                    className="rounded-lg px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 text-white font-semibold w-full sm:w-[140px] md:w-[160px] text-center flex items-center justify-center"
                   >
-                    <div className="text-base wrap-break-word">{unit || 'หน่วย'}</div>
+                    <div className="text-sm sm:text-base wrap-break-word">{unit || 'หน่วย'}</div>
                   </div>
                   
                   {/* Update Time */}
-                  <div className="text-orange-900 font-medium min-w-[140px]">
+                  <div className="text-orange-900 font-medium w-full sm:w-auto sm:min-w-[120px] md:min-w-[140px]">
                     <div className="text-xs text-orange-600 mb-1">Update Time</div>
-                    <div className="text-sm font-semibold">{timestamp}</div>
+                    <div className="text-xs sm:text-sm font-semibold break-words">{timestamp}</div>
                   </div>
                   
                   {/* รูปภาพในแถวเดียวกัน */}
                   <div className="flex-1 flex items-center gap-2 justify-start overflow-x-auto">
                     {images.length > 0 ? (
                       images.slice(0, 10).map((image, imgIndex) => (
-                        <div key={imgIndex} className="flex-shrink-0 w-[110px]">
+                        <div key={imgIndex} className="flex-shrink-0 w-[90px] sm:w-[100px] md:w-[110px]">
                           {!failedImages.has(image) ? (
                             <img
                               src={image}
                               alt={`รูป ${imgIndex + 1}`}
-                              className="w-full h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[80px] sm:h-[90px] md:h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(image)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(image));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[80px] sm:h-[90px] md:h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ))
                     ) : (
-                      <div className="flex-shrink-0 w-[110px]">
-                        <div className="w-full h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                      <div className="flex-shrink-0 w-[90px] sm:w-[100px] md:w-[110px]">
+                        <div className="w-full h-[80px] sm:h-[90px] md:h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       </div>
@@ -1178,42 +1092,44 @@ export default function SheetData3() {
                   </div>
                   
                   {/* สถานะตรวจสอบแล้ว */}
-                  <div className="flex items-center gap-2 min-w-[140px]">
+                  <div className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[140px] justify-center sm:justify-start">
                     {isChecked ? (
                       <>
-                        <span className="text-orange-900 text-sm font-semibold">ตรวจสอบแล้ว</span>
+                        <span className="text-orange-900 text-xs sm:text-sm font-semibold">ตรวจสอบแล้ว</span>
                         <div 
-                          className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
+                          className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
                           onClick={() => handleCheckboxChange(index)}
                         >
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       </>
                     ) : (
                       <>
-                        <span className="text-orange-600 text-sm">ยังไม่ได้ตรวจสอบ</span>
+                        <span className="text-orange-600 text-xs sm:text-sm">ยังไม่ได้ตรวจสอบ</span>
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleCheckboxChange(index)}
-                          className="w-6 h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
+                          className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
                         />
                       </>
                     )}
                   </div>
                   
+                  {/* ปุ่ม Reject และ Detail */}
+                  <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
                   {/* ปุ่ม Reject */}
                   <button
                     onClick={() => handleRejectChange(index)}
-                    className={`rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px] ${
+                    className={`rounded-lg px-3 py-2 sm:px-4 sm:py-2 flex flex-col items-center gap-1 transition-colors flex-1 sm:flex-none sm:min-w-[80px] ${
                       isRejected
                         ? 'bg-red-600 hover:bg-red-700 text-white'
                         : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
                     }`}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <span className="text-xs font-medium">Reject</span>
@@ -1222,17 +1138,18 @@ export default function SheetData3() {
                   {/* ปุ่ม Detail */}
                   <button
                     onClick={() => handleOpenDetailModal(row, index)}
-                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px]"
+                    className="bg-orange-600 hover:bg-orange-700 text-white rounded-lg px-3 py-2 sm:px-4 sm:py-2 flex flex-col items-center gap-1 transition-colors flex-1 sm:flex-none sm:min-w-[80px]"
                     style={{ backgroundColor: '#FF6A13' }}
                     onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e55a0f'}
                     onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FF6A13'}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                     </svg>
                     <span className="text-xs font-medium">Detail</span>
                   </button>
+                  </div>
                 </div>
               );
             })}

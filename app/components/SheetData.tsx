@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import FilterBar from './FilterBar';
+import { fetchSheetData, updateSheetData, deleteSheetRow } from '../lib/sheetsApi';
 
 interface SheetRow {
   [key: string]: string;
@@ -15,8 +16,9 @@ function convertDriveLinkToImageUrl(driveUrl: string): string | null {
     const match = driveUrl.match(/[?&]id=([a-zA-Z0-9_-]+)/);
     if (match && match[1]) {
       const fileId = match[1];
-      // ใช้ API route ของเราเพื่อดึงรูปภาพ (รองรับ private files)
-      return `/api/drive-image?id=${fileId}`;
+      // ใช้ thumbnail URL ซึ่งทำงานได้ดีกว่าสำหรับ public files
+      // https://drive.google.com/thumbnail?id=FILE_ID&sz=w1000
+      return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
     }
     return null;
   } catch {
@@ -64,16 +66,16 @@ function ImageModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 backdrop-blur-sm"
       style={{ backgroundColor: 'rgba(0, 0, 0, 0.15)' }}
       onClick={onClose}
     >
-      <div className="relative max-w-7xl max-h-full">
+      <div className="relative max-w-full sm:max-w-7xl max-h-full">
        
         <img
           src={imageUrl}
           alt="Expanded view"
-          className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl bg-white p-2"
+          className="max-w-full max-h-[85vh] sm:max-h-[90vh] object-contain rounded-lg shadow-2xl bg-white p-1 sm:p-2"
           onClick={(e) => e.stopPropagation()}
         />
       </div>
@@ -198,11 +200,7 @@ export default function SheetData() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/sheets');
-        if (!response.ok) {
-          throw new Error('Failed to fetch data');
-        }
-        const result = await response.json();
+        const result = await fetchSheetData('sheets');
         setData(result.data);
         
         // โหลดสถานะ "ตรวจสอบแล้ว" จาก Sheet
@@ -314,35 +312,8 @@ export default function SheetData() {
         columnName: statusColumn
       });
       
-      const response = await fetch('/api/sheets/update', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex, // 0-based index ของ data array
-          value: newCheckedState ? '1' : '0', // ติ๊ก = '1', ไม่ติ๊ก = '0'
-          columnName: statusColumn
-        }),
-      });
-      
-      console.log('Update response status:', response.status);
-      
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-          console.error('Update error data:', errorData);
-        } catch {
-          const responseText = await response.text();
-          console.error('Update error response text:', responseText);
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}`, details: responseText };
-        }
-        throw new Error(errorData.error || errorData.message || 'Failed to update sheet');
-      }
-      
-      const result = await response.json();
-      console.log('Sheet updated successfully:', result);
+      await updateSheetData('sheets', rowIndex, statusColumn, newCheckedState ? '1' : '0');
+      console.log('Sheet updated successfully');
     } catch (error) {
       console.error('Error updating sheet:', error);
       // Revert state if update failed
@@ -357,22 +328,19 @@ export default function SheetData() {
       });
       
       let errorMessage = 'ไม่ทราบสาเหตุ';
-      let errorDetails = '';
       
       if (error instanceof Error) {
         errorMessage = error.message;
-        // ลอง parse error message เพื่อดู details
-        try {
-          const errorMatch = error.message.match(/details[:\s]+(.+)/i);
-          if (errorMatch) {
-            errorDetails = errorMatch[1];
-          }
-        } catch {}
       }
       
-      const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}${errorDetails ? '\n\nรายละเอียด: ' + errorDetails : ''}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log สำหรับรายละเอียดเพิ่มเติม`;
-      
-      alert(fullMessage);
+      // ถ้าเป็น "Failed to fetch" ให้แสดงคำแนะนำเพิ่มเติม
+      if (errorMessage.includes('Failed to fetch') || errorMessage.includes('ไม่สามารถเชื่อมต่อ')) {
+        const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access (ไม่ใช่ "Only myself")\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ตรวจสอบ network connection\n5. ดู console log (F12) สำหรับรายละเอียดเพิ่มเติม`;
+        alert(fullMessage);
+      } else {
+        const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log (F12) สำหรับรายละเอียดเพิ่มเติม`;
+        alert(fullMessage);
+      }
     }
   };
 
@@ -389,28 +357,8 @@ export default function SheetData() {
 
     try {
       // เรียก API เพื่อลบแถวใน Google Sheet
-      const response = await fetch('/api/sheets/delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          rowIndex: rowIndex, // 0-based index ของ data array
-        }),
-      });
-
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          errorData = { error: `HTTP ${response.status}: ${response.statusText}` };
-        }
-        throw new Error(errorData.error || errorData.message || 'Failed to delete row');
-      }
-
-      const result = await response.json();
-      console.log('Row deleted:', result);
+      await deleteSheetRow('sheets', rowIndex);
+      console.log('Row deleted successfully');
 
       // ลบการ์ดออกจาก state (ลบข้อมูลออกจาก array)
       setData(prevData => prevData.filter((_, index) => index !== rowIndex));
@@ -670,100 +618,100 @@ export default function SheetData() {
               return (
                 <div
                   key={index}
-                  className="bg-orange-50 rounded-xl p-6 flex items-center gap-5 shadow-lg border-2 border-orange-200"
+                  className="bg-orange-50 rounded-xl p-3 sm:p-4 md:p-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 md:gap-5 shadow-lg border-2 border-orange-200"
                 >
                   {/* ปุ่มสีส้มด้านซ้าย */}
                   <div
                     style={{ backgroundColor: '#FF6A13' }}
-                    className="rounded-lg px-5 py-4 text-white font-semibold w-[160px] text-center flex items-center justify-center"
+                    className="rounded-lg px-3 py-2 sm:px-4 sm:py-3 md:px-5 md:py-4 text-white font-semibold w-full sm:w-[140px] md:w-[160px] text-center flex items-center justify-center"
                   >
-                    <div className="text-base wrap-break-word">{unit || 'หน่วย'}</div>
+                    <div className="text-sm sm:text-base wrap-break-word">{unit || 'หน่วย'}</div>
                   </div>
                   
                   {/* Update Time */}
-                  <div className="text-orange-900 font-medium min-w-[140px]">
+                  <div className="text-orange-900 font-medium w-full sm:min-w-[120px] md:min-w-[140px]">
                     <div className="text-xs text-orange-600 mb-1">Update Time</div>
-                    <div className="text-sm font-semibold">{timestamp}</div>
+                    <div className="text-xs sm:text-sm font-semibold break-words">{timestamp}</div>
                   </div>
                   
                   {/* รูปภาพ 3 ส่วนเท่าๆ กัน */}
-                  <div className="flex items-center gap-3 flex-1 justify-center">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center overflow-x-auto sm:overflow-x-visible">
                     {/* รูปที่ 1: ป้ายไวนิล */}
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
                       {vinylImage ? (
-                        <div className="relative w-full max-w-[140px]">
+                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
                           {!failedImages.has(vinylImage) ? (
                             <img
                               src={vinylImage}
                               alt="ป้ายไวนิล"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(vinylImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(vinylImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
                     </div>
                     
                     {/* รูปที่ 2: แบบ */}
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
                       {formImage ? (
-                        <div className="relative w-full max-w-[140px]">
+                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
                           {!failedImages.has(formImage) ? (
                             <img
                               src={formImage}
                               alt="แบบ"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(formImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(formImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
                     </div>
                     
                     {/* รูปที่ 3: รายชื่อ */}
-                    <div className="flex-1 flex justify-center">
+                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
                       {committeeImage ? (
-                        <div className="relative w-full max-w-[140px]">
+                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
                           {!failedImages.has(committeeImage) ? (
                             <img
                               src={committeeImage}
                               alt="รายชื่อ"
-                              className="w-full h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(committeeImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(committeeImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[140px] h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
@@ -771,42 +719,44 @@ export default function SheetData() {
                   </div>
                   
                   {/* สถานะตรวจสอบแล้ว */}
-                  <div className="flex items-center gap-2 min-w-[140px]">
+                  <div className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[140px] justify-center sm:justify-start">
                     {isChecked ? (
                       <>
-                        <span className="text-orange-900 text-sm font-semibold">ตรวจสอบแล้ว</span>
+                        <span className="text-orange-900 text-xs sm:text-sm font-semibold">ตรวจสอบแล้ว</span>
                         <div 
-                          className="w-8 h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
+                          className="w-6 h-6 sm:w-8 sm:h-8 bg-green-500 rounded-lg flex items-center justify-center shadow-md cursor-pointer hover:bg-green-600 transition-colors"
                           onClick={() => handleCheckboxChange(index)}
                         >
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
                       </>
                     ) : (
                       <>
-                        <span className="text-orange-600 text-sm">ยังไม่ได้ตรวจสอบ</span>
+                        <span className="text-orange-600 text-xs sm:text-sm">ยังไม่ได้ตรวจสอบ</span>
                         <input
                           type="checkbox"
                           checked={isChecked}
                           onChange={() => handleCheckboxChange(index)}
-                          className="w-6 h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
+                          className="w-5 h-5 sm:w-6 sm:h-6 cursor-pointer rounded-md border-2 border-orange-400 text-orange-600"
                         />
                       </>
                     )}
                   </div>
                   
+                  {/* ปุ่ม Reject และ Export */}
+                  <div className="flex flex-row sm:flex-col gap-2 w-full sm:w-auto">
                   {/* ปุ่ม Reject */}
                   <button
                     onClick={() => handleRejectChange(index)}
-                    className={`rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px] ${
+                    className={`rounded-lg px-3 py-2 sm:px-4 sm:py-2 flex flex-col items-center gap-1 transition-colors flex-1 sm:flex-none sm:min-w-[80px] ${
                       isRejected
                         ? 'bg-red-600 hover:bg-red-700 text-white'
                         : 'bg-gray-300 hover:bg-gray-400 text-gray-700'
                     }`}
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                     <span className="text-xs font-medium">Reject</span>
@@ -815,13 +765,14 @@ export default function SheetData() {
                   {/* ปุ่ม Export */}
                   <button
                     onClick={() => handleExport(index, row)}
-                    className="bg-blue-800 hover:bg-blue-700 text-white rounded-lg px-4 py-2 flex flex-col items-center gap-1 transition-colors min-w-[80px]"
+                    className="bg-blue-800 hover:bg-blue-700 text-white rounded-lg px-3 py-2 sm:px-4 sm:py-2 flex flex-col items-center gap-1 transition-colors flex-1 sm:flex-none sm:min-w-[80px]"
                   >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                     </svg>
                     <span className="text-xs font-medium">Export</span>
                   </button>
+                  </div>
                 </div>
               );
             })}
