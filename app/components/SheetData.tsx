@@ -629,7 +629,7 @@ export default function SheetData() {
                   </div>
                   
                   {/* Update Time */}
-                  <div className="text-orange-900 font-medium w-full sm:min-w-[120px] md:min-w-[140px]">
+                  <div className="text-orange-900 font-medium w-full sm:w-auto sm:min-w-[120px] md:min-w-[70px]">
                     <div className="text-xs text-orange-600 mb-1">Update Time</div>
                     <div className="text-xs sm:text-sm font-semibold break-words">{timestamp}</div>
                   </div>
