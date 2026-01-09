@@ -551,7 +551,7 @@ export default function SheetData() {
 
   return (
     <>
-      <div className="w-full overflow-x-auto p-4">
+      <div className="w-full overflow-x-auto p-2 sm:p-4">
         <div className=" rounded-2xl ">
           {/* Filter Bar */}
           <FilterBar
@@ -562,7 +562,7 @@ export default function SheetData() {
           {/* <h2 className="text-3xl font-bold mb-6 text-center text-orange-800 drop-shadow-sm">
             ระบบแสดงผล รายงานก่อนเปิดหีบํ
           </h2> */}
-          <div className="w-full space-y-5">
+          <div className="w-full space-y-3 sm:space-y-5">
             {filteredData.map((row, filteredIdx) => {
               const index = originalIndexMap.get(filteredIdx) ?? filteredIdx;
               const isChecked = checkedRows.has(index);
@@ -635,83 +635,83 @@ export default function SheetData() {
                   </div>
                   
                   {/* รูปภาพ 3 ส่วนเท่าๆ กัน */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-1 justify-center overflow-x-auto sm:overflow-x-visible">
+                  <div className="flex-1 flex items-center gap-2 justify-center overflow-x-auto sm:overflow-x-visible">
                     {/* รูปที่ 1: ป้ายไวนิล */}
-                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
+                    <div className="flex-1 flex justify-center min-w-[70px] sm:min-w-[90px] md:max-w-[110px] flex-shrink-0">
                       {vinylImage ? (
-                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
+                        <div className="relative w-full">
                           {!failedImages.has(vinylImage) ? (
                             <img
                               src={vinylImage}
                               alt="ป้ายไวนิล"
-                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[70px] sm:h-[85px] md:h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(vinylImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(vinylImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
                     </div>
                     
                     {/* รูปที่ 2: แบบ */}
-                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
+                    <div className="flex-1 flex justify-center min-w-[70px] sm:min-w-[90px] md:max-w-[110px] flex-shrink-0">
                       {formImage ? (
-                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
+                        <div className="relative w-full">
                           {!failedImages.has(formImage) ? (
                             <img
                               src={formImage}
                               alt="แบบ"
-                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[70px] sm:h-[85px] md:h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(formImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(formImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
                     </div>
                     
                     {/* รูปที่ 3: รายชื่อ */}
-                    <div className="flex-1 flex justify-center min-w-[100px] sm:min-w-[120px] md:min-w-[140px]">
+                    <div className="flex-1 flex justify-center min-w-[70px] sm:min-w-[90px] md:max-w-[110px] flex-shrink-0">
                       {committeeImage ? (
-                        <div className="relative w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px]">
+                        <div className="relative w-full">
                           {!failedImages.has(committeeImage) ? (
                             <img
                               src={committeeImage}
                               alt="รายชื่อ"
-                              className="w-full h-[100px] sm:h-[120px] md:h-[140px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
+                              className="w-full h-[70px] sm:h-[85px] md:h-[100px] object-cover rounded-lg cursor-pointer border-2 border-orange-300 shadow-md"
                               onClick={() => handleImageClick(committeeImage)}
                               onError={() => {
                                 setFailedImages(prev => new Set(prev).add(committeeImage));
                               }}
                             />
                           ) : (
-                            <div className="w-full h-[100px] sm:h-[120px] md:h-[140px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                            <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-300 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                               <span className="text-xs text-gray-500">Error</span>
                             </div>
                           )}
                         </div>
                       ) : (
-                        <div className="w-full max-w-[100px] sm:max-w-[120px] md:max-w-[140px] h-[100px] sm:h-[120px] md:h-[140px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
+                        <div className="w-full h-[70px] sm:h-[85px] md:h-[100px] bg-gray-200 rounded-lg border-2 border-orange-300 flex items-center justify-center">
                           <span className="text-xs text-gray-400">ไม่มีรูป</span>
                         </div>
                       )}
