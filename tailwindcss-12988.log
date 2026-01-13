@@ -1,0 +1,131 @@
+2026-01-10T08:47:55.415719Z  INFO tailwindcss_oxide::scanner: Provided sources:
+2026-01-10T08:47:55.415886Z  INFO tailwindcss_oxide::scanner: Source: PublicSourceEntry { base: "C:\\Users\\Lenovo\\Documents\\GitHub\\NON", pattern: "**/*", negated: false }
+2026-01-10T08:47:55.416209Z  INFO tailwindcss_oxide::scanner: Optimized sources:
+2026-01-10T08:47:55.416241Z  INFO tailwindcss_oxide::scanner: Source: Auto { base: "C:\\Users\\Lenovo\\Documents\\GitHub\\NON" }
+2026-01-10T08:47:55.419681Z  INFO scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.422307Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\.htaccess"
+2026-01-10T08:47:55.423188Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app"
+2026-01-10T08:47:55.423502Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\api"
+2026-01-10T08:47:55.423817Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components"
+2026-01-10T08:47:55.424084Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\Dashboard.tsx"
+2026-01-10T08:47:55.424206Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\FilterBar.tsx"
+2026-01-10T08:47:55.424321Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\Navbar.tsx"
+2026-01-10T08:47:55.424431Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData.tsx"
+2026-01-10T08:47:55.424534Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData2.tsx"
+2026-01-10T08:47:55.424634Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData3.tsx"
+2026-01-10T08:47:55.424735Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\TrailingSlashHandler.tsx"
+2026-01-10T08:47:55.424887Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\globals.css"
+2026-01-10T08:47:55.424999Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\layout.tsx"
+2026-01-10T08:47:55.425171Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\lib"
+2026-01-10T08:47:55.425384Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\lib\\sheetsApi.ts"
+2026-01-10T08:47:55.425519Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\page.tsx"
+2026-01-10T08:47:55.425661Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages"
+2026-01-10T08:47:55.425906Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\after"
+2026-01-10T08:47:55.426112Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\after\\page.tsx"
+2026-01-10T08:47:55.426294Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\alert"
+2026-01-10T08:47:55.426493Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\alert\\page.tsx"
+2026-01-10T08:47:55.426728Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\before"
+2026-01-10T08:47:55.427048Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\before\\page.tsx"
+2026-01-10T08:47:55.427312Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\dashboard"
+2026-01-10T08:47:55.427524Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\dashboard\\page.tsx"
+2026-01-10T08:47:55.427703Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\DEPLOYMENT_FIX.md"
+2026-01-10T08:47:55.427799Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\DEPLOYMENT_NGINX.md"
+2026-01-10T08:47:55.427896Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\eslint.config.mjs"
+2026-01-10T08:47:55.427993Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\google-apps-script-code.gs"
+2026-01-10T08:47:55.428139Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\next.config.ts"
+2026-01-10T08:47:55.428239Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nginx.conf"
+2026-01-10T08:47:55.428856Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\package.json"
+2026-01-10T08:47:55.428986Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\postcss.config.mjs"
+2026-01-10T08:47:55.429146Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public"
+2026-01-10T08:47:55.429388Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\file.svg"
+2026-01-10T08:47:55.429477Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\globe.svg"
+2026-01-10T08:47:55.429560Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\next.svg"
+2026-01-10T08:47:55.429647Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\People-party.svg"
+2026-01-10T08:47:55.429783Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\vercel.svg"
+2026-01-10T08:47:55.429894Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\window.svg"
+2026-01-10T08:47:55.430015Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\README.md"
+2026-01-10T08:47:55.430204Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts"
+2026-01-10T08:47:55.430443Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts\\create-redirect-files.js"
+2026-01-10T08:47:55.430552Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts\\fix-html-urls.js"
+2026-01-10T08:47:55.430912Z  INFO scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\tsconfig.json"
+2026-01-10T08:47:55.431150Z  INFO scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.431169Z  INFO extract_candidates: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.431179Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.431185Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 33 file(s)
+2026-01-10T08:47:55.432175Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\nginx.conf"
+2026-01-10T08:47:55.432181Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\layout.tsx"
+2026-01-10T08:47:55.432210Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\alert\\page.tsx"
+2026-01-10T08:47:55.432244Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\eslint.config.mjs"
+2026-01-10T08:47:55.432304Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\package.json"
+2026-01-10T08:47:55.432307Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\page.tsx"
+2026-01-10T08:47:55.432352Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\window.svg"
+2026-01-10T08:47:55.432385Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\lib\\sheetsApi.ts"
+2026-01-10T08:47:55.432435Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\globe.svg"
+2026-01-10T08:47:55.432429Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\.htaccess"
+2026-01-10T08:47:55.432469Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\FilterBar.tsx"
+2026-01-10T08:47:55.432486Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData.tsx"
+2026-01-10T08:47:55.432444Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\postcss.config.mjs"
+2026-01-10T08:47:55.432471Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\before\\page.tsx"
+2026-01-10T08:47:55.432546Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\DEPLOYMENT_NGINX.md"
+2026-01-10T08:47:55.432566Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\after\\page.tsx"
+2026-01-10T08:47:55.432534Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\google-apps-script-code.gs"
+2026-01-10T08:47:55.432592Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\DEPLOYMENT_FIX.md"
+2026-01-10T08:47:55.432592Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\Navbar.tsx"
+2026-01-10T08:47:55.432617Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\dashboard\\page.tsx"
+2026-01-10T08:47:55.432619Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\next.config.ts"
+2026-01-10T08:47:55.432645Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\Dashboard.tsx"
+2026-01-10T08:47:55.432675Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\file.svg"
+2026-01-10T08:47:55.432706Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData3.tsx"
+2026-01-10T08:47:55.432723Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\People-party.svg"
+2026-01-10T08:47:55.432741Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\vercel.svg"
+2026-01-10T08:47:55.432754Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\SheetData2.tsx"
+2026-01-10T08:47:55.432780Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\tsconfig.json"
+2026-01-10T08:47:55.432788Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\README.md"
+2026-01-10T08:47:55.432833Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public\\next.svg"
+2026-01-10T08:47:55.432908Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components\\TrailingSlashHandler.tsx"
+2026-01-10T08:47:55.432935Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts\\create-redirect-files.js"
+2026-01-10T08:47:55.432963Z  INFO tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts\\fix-html-urls.js"
+2026-01-10T08:47:55.433021Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.433036Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.433041Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.434325Z  INFO extract_candidates:parse_all_blobs:extract: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.434417Z  INFO extract_candidates:parse_all_blobs: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.434427Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.434432Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading 1 file(s)
+2026-01-10T08:47:55.434563Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: Reading "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\globals.css"
+2026-01-10T08:47:55.434575Z  INFO extract_candidates:read_all_files: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.434586Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.434591Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.434632Z  INFO extract_candidates:extract_css_variables:extract: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.434644Z  INFO extract_candidates:extract_css_variables: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.435420Z  INFO extract_candidates: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.436601Z  INFO get_files: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.436639Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.439519Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app"
+2026-01-10T08:47:55.439825Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\api"
+2026-01-10T08:47:55.440182Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components"
+2026-01-10T08:47:55.441378Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\lib"
+2026-01-10T08:47:55.441883Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages"
+2026-01-10T08:47:55.442194Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\after"
+2026-01-10T08:47:55.442622Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\alert"
+2026-01-10T08:47:55.443065Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\before"
+2026-01-10T08:47:55.443490Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\dashboard"
+2026-01-10T08:47:55.444844Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public"
+2026-01-10T08:47:55.445545Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts"
+2026-01-10T08:47:55.446287Z  INFO get_files:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.446429Z  INFO get_files: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.446944Z  INFO get_globs: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.446969Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: enter
+2026-01-10T08:47:55.450431Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app"
+2026-01-10T08:47:55.450880Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\api"
+2026-01-10T08:47:55.451461Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\components"
+2026-01-10T08:47:55.452339Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\lib"
+2026-01-10T08:47:55.452808Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages"
+2026-01-10T08:47:55.453107Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\after"
+2026-01-10T08:47:55.453563Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\alert"
+2026-01-10T08:47:55.453973Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\before"
+2026-01-10T08:47:55.454377Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\app\\pages\\dashboard"
+2026-01-10T08:47:55.456183Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\public"
+2026-01-10T08:47:55.456848Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: Discovering "C:\\Users\\Lenovo\\Documents\\GitHub\\NON\\scripts"
+2026-01-10T08:47:55.457559Z  INFO get_globs:scan_sources: tailwindcss_oxide::scanner: exit
+2026-01-10T08:47:55.478878Z  INFO get_globs: tailwindcss_oxide::scanner: exit

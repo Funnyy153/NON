@@ -22,7 +22,7 @@ export default function Home() {
     }
     setError("");
     // Redirect to before page
-    router.push("/pages/before");
+    router.push("/pages/dashboard");
   };
 
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {

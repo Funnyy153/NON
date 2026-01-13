@@ -10,9 +10,11 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
+    { label: "Dashboard", path: "/pages/dashboard" },
     { label: "รายงานก่อนเปิดหีบ", path: "/pages/before" },
-    { label: "รายงานหลังปิดหีบ", path: "/pages/after" },
-    { label: "Incident Alert", path: "/pages/alert" },
+    { label: "รายงานหลังนับคะแนน", path: "/pages/after" },
+    { label: "รายงานความผิดปกติ", path: "/pages/alert" },
+    
   ];
 
   const handleNavigation = (path: string) => {

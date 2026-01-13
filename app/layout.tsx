@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
-import TrailingSlashHandler from "./components/TrailingSlashHandler";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,24 +27,6 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Script to handle trailing slash immediately, before React loads */}
-        <Script
-          id="trailing-slash-handler"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var path = window.location.pathname;
-                if (path !== '/' && path.endsWith('/')) {
-                  var newPath = path.slice(0, -1);
-                  window.history.replaceState(null, '', newPath);
-                  window.location.href = newPath;
-                }
-              })();
-            `,
-          }}
-        />
-        <TrailingSlashHandler />
         {children}
       </body>
     </html>

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "node scripts/create-redirect-files.js && node scripts/fix-html-urls.js",
     "start": "next start",
     "lint": "eslint"
   },

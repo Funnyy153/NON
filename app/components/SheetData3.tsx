@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import FilterBar from './FilterBar';
-import { fetchSheetData, updateSheetData, deleteSheetRow } from '../lib/sheetsApi';
+import { fetchSheetData, updateSheetData } from '../lib/sheetsApi';
 
 interface SheetRow {
   [key: string]: string;
@@ -478,100 +478,6 @@ function DetailModal({
   );
 }
 
-// Modal component สำหรับยืนยันการลบ
-function DeleteConfirmationModal({
-  isOpen,
-  onClose,
-  onConfirm,
-  unitName
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  unitName?: string;
-}) {
-  useEffect(() => {
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'hidden';
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
-
-  if (!isOpen) return null;
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
-      style={{ backgroundColor: 'rgba(0, 0, 0, 0.3)' }}
-      onClick={onClose}
-    >
-      <div
-        className="rounded-2xl shadow-2xl p-8 max-w-md w-full"
-        style={{ backgroundColor: '#FF6A13' }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Warning Icon */}
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-full flex items-center justify-center border-4"
-               style={{ 
-                 backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                 borderColor: 'rgba(255, 255, 255, 0.3)'
-               }}>
-            <span className="text-4xl font-bold text-white">!</span>
-          </div>
-        </div>
-
-        {/* Main Question */}
-        <h3 className="text-2xl font-bold text-white text-center mb-3">
-          คุณแน่ใจหรือไม่?
-        </h3>
-
-        {/* Warning Message */}
-        <div className="mb-6 text-center">
-          <p className="text-white/90 text-sm mb-3">
-            คุณจะไม่สามารถกู้คืนรายการนี้ได้!
-          </p>
-          {unitName && (
-            <p className="text-white/80 text-sm  p-3 rounded-lg">
-              <span className="font-semibold text-black">หน่วย:</span> <span className="text-black">{unitName}</span>
-            </p>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex gap-3 justify-center">
-          <button
-            onClick={onClose}
-            className="px-6 py-2.5 rounded-lg bg-white/20 hover:bg-white/30 text-white font-medium transition-colors backdrop-blur-sm"
-          >
-            ยกเลิก
-          </button>
-          <button
-            onClick={() => {
-              onConfirm();
-              onClose();
-            }}
-            className="px-6 py-2.5 rounded-lg bg-white text-orange-600 hover:bg-orange-50 font-bold transition-colors shadow-lg"
-            style={{ color: '#FF6A13' }}
-          >
-            ใช่, ลบเลย!
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 export default function SheetData3() {
   const [data, setData] = useState<SheetRow[]>([]);
@@ -582,11 +488,10 @@ export default function SheetData3() {
   const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
   const [checkedRows, setCheckedRows] = useState<Set<number>>(new Set());
   const [rejectedRows, setRejectedRows] = useState<Set<number>>(new Set());
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-  const [rowToDelete, setRowToDelete] = useState<number | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState<SheetRow | null>(null);
   const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
+  const [loadingCheckboxes, setLoadingCheckboxes] = useState<Set<number>>(new Set());
   
   // Filter states
   const [searchTerm, setSearchTerm] = useState('');
@@ -596,6 +501,8 @@ export default function SheetData3() {
   });
   const [showClosedCases, setShowClosedCases] = useState(true);
   const [closedRows, setClosedRows] = useState<Set<number>>(new Set());
+  const [selectedUnit, setSelectedUnit] = useState<string>('');
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // ฟังก์ชันสำหรับ fetch และ process ข้อมูล
   const fetchAndProcessData = async (isInitialLoad = false) => {
@@ -607,16 +514,43 @@ export default function SheetData3() {
       const result = await fetchSheetData('sheets3');
       const rawData = result.data;
       
+      // กรองข้อมูลแถวว่างๆ ออก
+      let filteredData: SheetRow[] = [];
+      if (rawData && rawData.length > 0) {
+        const headers = Object.keys(rawData[0]);
+        const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+        const timestampHeader = headers.find(h => h.toLowerCase().includes('timestamp')) || '';
+        
+        filteredData = rawData.filter((row: SheetRow) => {
+          const unit = row[unitHeader] || '';
+          const timestamp = row[timestampHeader] || '';
+          
+          // ตรวจสอบว่าแถวมีข้อมูลจริงๆ
+          // ต้องมีชื่อหน่วย และต้องมี timestamp หรือมีข้อมูลอื่นๆ อย่างน้อย 3 คอลัมน์ (ไม่นับชื่อหน่วยและ timestamp)
+          const hasTimestamp = timestamp && timestamp.trim() !== '';
+          const otherDataCount = Object.entries(row).filter(([key, val]) => {
+            // ข้ามชื่อหน่วยและ timestamp
+            if (key === unitHeader || key === timestampHeader) return false;
+            // ตรวจสอบว่ามีข้อมูลที่ไม่ใช่ค่าว่าง
+            const value = val && typeof val === 'string' ? val.trim() : '';
+            return value !== '';
+          }).length;
+          
+          // ข้ามแถวที่ไม่มีข้อมูลจริงๆ (ไม่มี timestamp และไม่มีข้อมูลอื่นๆ อย่างน้อย 3 คอลัมน์)
+          return unit && (hasTimestamp || otherDataCount >= 3);
+        });
+      }
+      
       // เปรียบเทียบกับข้อมูลเดิมเพื่อดูว่ามีข้อมูลใหม่หรือไม่
       const currentDataLength = data.length;
-      const hasNewData = rawData && rawData.length > currentDataLength;
+      const hasNewData = filteredData.length > currentDataLength;
       
-      setData(rawData);
+      setData(filteredData);
       
       // โหลดสถานะ "ตรวจสอบแล้ว" และ "ปิดเคส" จาก Sheet
       // หา column "สถานะ" และ "ปิดเคส" จาก headers
-      if (rawData && rawData.length > 0) {
-        const headers = Object.keys(rawData[0]);
+      if (filteredData && filteredData.length > 0) {
+        const headers = Object.keys(filteredData[0]);
         const statusColumn = headers.find(h => 
           h && (h.includes('สถานะ') || h.toLowerCase().includes('status'))
         );
@@ -626,7 +560,7 @@ export default function SheetData3() {
         
         if (statusColumn) {
           const checkedIndices = new Set<number>();
-          rawData.forEach((row: SheetRow, index: number) => {
+          filteredData.forEach((row: SheetRow, index: number) => {
             const statusValue = row[statusColumn];
             // ถ้าค่าเป็น "1" หรือ "1.0" หรือ "ตรวจสอบแล้ว" ให้ mark เป็น checked
             if (statusValue === '1' || statusValue === '1.0' || statusValue === 'ตรวจสอบแล้ว') {
@@ -638,13 +572,13 @@ export default function SheetData3() {
           if (isInitialLoad) {
             console.log('Loaded checked rows from Sheet:', checkedIndices.size);
           } else if (hasNewData) {
-            console.log('New data detected! Updated from', currentDataLength, 'to', rawData.length, 'rows');
+            console.log('New data detected! Updated from', currentDataLength, 'to', filteredData.length, 'rows');
           }
         }
 
         if (closeCaseColumn) {
           const closedIndices = new Set<number>();
-          rawData.forEach((row: SheetRow, index: number) => {
+          filteredData.forEach((row: SheetRow, index: number) => {
             const closeCaseValue = row[closeCaseColumn];
             // ถ้าค่าเป็น "1" หรือ "1.0" ให้ mark เป็น closed
             if (closeCaseValue === '1' || closeCaseValue === '1.0') {
@@ -655,6 +589,27 @@ export default function SheetData3() {
           
           if (isInitialLoad) {
             console.log('Loaded closed rows from Sheet:', closedIndices.size);
+          }
+        }
+
+        // โหลดสถานะ "reject" หรือ "ปฏิเสธ" จาก Sheet
+        const rejectColumn = headers.find(h => 
+          h && (h.includes('reject') || h.includes('ปฏิเสธ') || h.toLowerCase().includes('reject'))
+        );
+        
+        if (rejectColumn) {
+          const rejectedIndices = new Set<number>();
+          filteredData.forEach((row: SheetRow, index: number) => {
+            const rejectValue = row[rejectColumn];
+            // ถ้าค่าเป็น "1" หรือ "1.0" ให้ mark เป็น rejected
+            if (rejectValue === '1' || rejectValue === '1.0') {
+              rejectedIndices.add(index);
+            }
+          });
+          setRejectedRows(rejectedIndices);
+          
+          if (isInitialLoad) {
+            console.log('Loaded rejected rows from Sheet:', rejectedIndices.size);
           }
         }
       }
@@ -816,6 +771,9 @@ export default function SheetData3() {
   const handleCheckboxChange = async (rowIndex: number) => {
     const newCheckedState = !checkedRows.has(rowIndex);
     
+    // เริ่ม loading
+    setLoadingCheckboxes(prev => new Set(prev).add(rowIndex));
+    
     // อัปเดต state ทันที
     setCheckedRows(prev => {
       const newSet = new Set(prev);
@@ -890,6 +848,13 @@ export default function SheetData3() {
         const fullMessage = `ไม่สามารถอัปเดต Google Sheet ได้\n\n${errorMessage}\n\nกรุณาตรวจสอบ:\n1. Google Apps Script ถูก deploy แล้ว\n2. Web App ตั้งค่า "Anyone" access\n3. Apps Script มี function doPost และรองรับ action 'update'\n4. ดู console log (F12) สำหรับรายละเอียดเพิ่มเติม`;
         alert(fullMessage);
       }
+    } finally {
+      // หยุด loading
+      setLoadingCheckboxes(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(rowIndex);
+        return newSet;
+      });
     }
   };
 
@@ -953,6 +918,22 @@ export default function SheetData3() {
         });
       }
 
+      // อัปเดต rejectedRows ถ้าเป็นการอัปเดต reject
+      const rejectHeader = headers.find(h => 
+        h && (h.includes('reject') || h.includes('ปฏิเสธ') || h.toLowerCase().includes('reject'))
+      );
+      if (rejectHeader && columnName === rejectHeader) {
+        setRejectedRows(prev => {
+          const newSet = new Set(prev);
+          if (value === '1' || value === '1.0') {
+            newSet.add(rowIndex);
+          } else {
+            newSet.delete(rowIndex);
+          }
+          return newSet;
+        });
+      }
+
       // อัปเดตสีพื้นหลังของการ์ดเมื่อสถานะหรือปิดเคสเปลี่ยน (อ่านค่าจาก Sheet)
       if ((statusHeader && columnName === statusHeader) || (closeCaseHeader && columnName === closeCaseHeader)) {
         await updateCardColor(rowIndex);
@@ -963,59 +944,60 @@ export default function SheetData3() {
     }
   };
 
-  const handleRejectChange = (rowIndex: number) => {
-    // เปิด modal ยืนยันการลบ
-    setRowToDelete(rowIndex);
-    setDeleteModalOpen(true);
-  };
-
-  const handleConfirmDelete = async () => {
-    if (rowToDelete === null) return;
-
-    const rowIndex = rowToDelete;
-
+  const handleRejectChange = async (rowIndex: number) => {
     try {
-      // เรียก API เพื่อลบแถวใน Google Sheet
-      await deleteSheetRow('sheets3', rowIndex);
-      console.log('Row deleted successfully');
-
-      // ลบการ์ดออกจาก state (ลบข้อมูลออกจาก array)
-      setData(prevData => prevData.filter((_, index) => index !== rowIndex));
+      // หา column name "reject" หรือ "ปฏิเสธ" จาก headers
+      const rejectColumn = headers.find(h => 
+        h && (h.includes('reject') || h.includes('ปฏิเสธ') || h.toLowerCase().includes('reject'))
+      );
       
-      // ลบออกจาก rejectedRows และ checkedRows ด้วย
+      if (!rejectColumn) {
+        console.warn('Reject column not found in headers');
+        return;
+      }
+
+      // อ่านค่าปัจจุบันจาก Sheet
+      const currentRow = data[rowIndex];
+      const currentRejectValue = currentRow[rejectColumn] || '0';
+      
+      // Toggle: ถ้าเป็น 1 เปลี่ยนเป็น 0, ถ้าเป็น 0 เปลี่ยนเป็น 1
+      const newRejectValue = (currentRejectValue === '1' || currentRejectValue === '1.0') ? '0' : '1';
+      
+      // อัปเดตค่าใน Google Sheet
+      await updateSheetData('sheets3', rowIndex, rejectColumn, newRejectValue);
+      console.log('Reject status updated successfully:', newRejectValue);
+
+      // อัปเดตข้อมูลใน state
+      setData(prevData => {
+        const newData = [...prevData];
+        if (newData[rowIndex]) {
+          newData[rowIndex] = { ...newData[rowIndex], [rejectColumn]: newRejectValue };
+        }
+        return newData;
+      });
+
+      // อัปเดต rejectedRows state
       setRejectedRows(prev => {
         const newSet = new Set(prev);
-        newSet.delete(rowIndex);
-        // ลบ index ที่มากกว่า rowIndex ออกด้วย (เพราะ array ลดลง)
-        const updatedSet = new Set<number>();
-        newSet.forEach(idx => {
-          if (idx < rowIndex) {
-            updatedSet.add(idx);
-          } else if (idx > rowIndex) {
-            updatedSet.add(idx - 1);
-          }
-        });
-        return updatedSet;
+        if (newRejectValue === '1') {
+          newSet.add(rowIndex);
+        } else {
+          newSet.delete(rowIndex);
+        }
+        return newSet;
       });
-      
-      setCheckedRows(prev => {
-        const newSet = new Set(prev);
-        const updatedSet = new Set<number>();
-        newSet.forEach(idx => {
-          if (idx < rowIndex) {
-            updatedSet.add(idx);
-          } else if (idx > rowIndex) {
-            updatedSet.add(idx - 1);
-          }
+
+      // อัปเดต selectedRowData ใน modal ถ้าเป็นแถวเดียวกันและ modal เปิดอยู่
+      if (detailModalOpen && selectedRowIndex === rowIndex) {
+        setSelectedRowData(prev => {
+          if (!prev) return prev;
+          return { ...prev, [rejectColumn]: newRejectValue };
         });
-        return updatedSet;
-      });
+      }
     } catch (error) {
-      console.error('Error deleting row:', error);
+      console.error('Error updating reject status:', error);
       const errorMessage = error instanceof Error ? error.message : 'ไม่ทราบสาเหตุ';
-      alert(`ไม่สามารถลบแถวได้\n\n${errorMessage}`);
-    } finally {
-      setRowToDelete(null);
+      alert(`ไม่สามารถอัปเดตสถานะ reject ได้\n\n${errorMessage}`);
     }
   };
 
@@ -1024,10 +1006,17 @@ export default function SheetData3() {
     const statusHeader = headers.find(h => h.includes('สถานะ') || h.toLowerCase().includes('status')) || '';
     const closeCaseHeader = headers.find(h => h.includes('ปิดเคส') || h.includes('ปิด')) || '';
     const colorHeader = headers.find(h => h.includes('สี') || h.toLowerCase().includes('color')) || '';
+    const rejectHeader = headers.find(h => h.includes('reject') || h.includes('ปฏิเสธ') || h.toLowerCase().includes('reject')) || '';
     
     const status = row[statusHeader] || '0';
     const closeCase = row[closeCaseHeader] || '0';
     const colorValue = row[colorHeader] || '';
+    const rejectValue = row[rejectHeader] || '0';
+    
+    // ถ้า reject = 1 ให้ return '3' เพื่อเรียงไว้ล่างสุด (หลังเขียว)
+    if (rejectValue === '1' || rejectValue === '1.0') {
+      return '3'; // เทา (reject)
+    }
     
     // ถ้ามีค่าใน Sheet ใช้ค่าใน Sheet
     if (colorValue && (colorValue === '0' || colorValue === '1' || colorValue === '2')) {
@@ -1044,15 +1033,68 @@ export default function SheetData3() {
     }
   };
 
-  // Filter and sort data by color: ส้ม (0) → ขาว (1) → เขียว (2)
+  // Helper function to parse date from timestamp string
+  const parseDate = (timestamp: string): Date | null => {
+    if (!timestamp || timestamp.trim() === '') return null;
+    
+    try {
+      // Try parsing as MM/DD/YYYY HH:MM:SS format (from Google Sheets)
+      const dateMatch = timestamp.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/);
+      if (dateMatch) {
+        const [, month, day, year, hours, minutes, seconds] = dateMatch;
+        return new Date(
+          parseInt(year),
+          parseInt(month) - 1, // Month is 0-indexed
+          parseInt(day),
+          parseInt(hours),
+          parseInt(minutes),
+          parseInt(seconds)
+        );
+      }
+      // Try standard Date parsing
+      const date = new Date(timestamp);
+      return isNaN(date.getTime()) ? null : date;
+    } catch {
+      return null;
+    }
+  };
+
+  // Helper function to check if two dates are the same day
+  const isSameDate = (date1: Date, date2: Date): boolean => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  // Filter and sort data by color: ส้ม (0) → ขาว (1) → เขียว (2) → เทา/Reject (3)
   // Within each color group, sort by newest first (higher index = newer)
   const filteredDataWithIndex = data
     .map((row, index) => ({ row, index }))
     .filter(({ row, index }) => {
       // Filter by search term (หน่วยเลือกตั้ง)
       const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
+      const timestampHeader = headers.find(h => h.toLowerCase().includes('timestamp')) || '';
       const unit = row[unitHeader] || '';
       const matchesSearch = !searchTerm || unit.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Filter by unit
+      const matchesUnit = !selectedUnit || unit === selectedUnit;
+      
+      // Filter by date
+      let matchesDate = true;
+      if (selectedDate && timestampHeader) {
+        const timestamp = row[timestampHeader] || '';
+        if (timestamp) {
+          const reportDate = parseDate(timestamp);
+          if (reportDate) {
+            matchesDate = isSameDate(reportDate, selectedDate);
+          } else {
+            matchesDate = false;
+          }
+        } else {
+          matchesDate = false;
+        }
+      }
       
       // Filter by status
       const isChecked = checkedRows.has(index);
@@ -1062,7 +1104,10 @@ export default function SheetData3() {
       const isClosed = closedRows.has(index);
       const matchesCloseCase = showClosedCases || !isClosed;
       
-      return matchesSearch && matchesStatus && matchesCloseCase;
+      // Filter by reject (แสดง reject ทั้งหมด - ไม่มีการซ่อน reject)
+      // ถ้าต้องการซ่อน reject สามารถเพิ่ม filter ได้ที่นี่
+      
+      return matchesSearch && matchesUnit && matchesDate && matchesStatus && matchesCloseCase;
     })
     .map(({ row, index }) => ({
       row,
@@ -1070,7 +1115,7 @@ export default function SheetData3() {
       colorValue: getCardColorValue(row, index)
     }))
     .sort((a, b) => {
-      // เรียงตามสี: ส้ม (0) → ขาว (1) → เขียว (2)
+      // เรียงตามสี: ส้ม (0) → ขาว (1) → เขียว (2) → เทา/Reject (3)
       const colorOrder = parseInt(a.colorValue) - parseInt(b.colorValue);
       if (colorOrder !== 0) {
         return colorOrder;
@@ -1097,6 +1142,10 @@ export default function SheetData3() {
             onStatusFilterChange={setStatusFilters}
             showClosedCases={showClosedCases}
             onCloseCaseFilterChange={setShowClosedCases}
+            selectedUnit={selectedUnit}
+            onUnitChange={setSelectedUnit}
+            selectedDate={selectedDate}
+            onDateChange={setSelectedDate}
           />
           
           <div className="w-full space-y-3 sm:space-y-5">
@@ -1110,6 +1159,7 @@ export default function SheetData3() {
               const statusHeader = headers.find(h => h.includes('สถานะ') || h.toLowerCase().includes('status')) || '';
               const closeCaseHeader = headers.find(h => h.includes('ปิดเคส') || h.includes('ปิด')) || '';
               const colorHeader = headers.find(h => h.includes('สี') || h.toLowerCase().includes('color')) || '';
+              const rejectHeader = headers.find(h => h.includes('reject') || h.includes('ปฏิเสธ') || h.toLowerCase().includes('reject')) || '';
               
               const unit = row[unitHeader] || '';
               const timestamp = row[timestampHeader] || '';
@@ -1117,13 +1167,18 @@ export default function SheetData3() {
               const status = row[statusHeader] || '0';
               const closeCase = row[closeCaseHeader] || '0';
               const colorValue = row[colorHeader] || '';
+              const rejectValue = row[rejectHeader] || '0';
               
-              // คำนวณสีพื้นหลัง: ถ้ามีค่าใน Sheet ใช้ค่าใน Sheet, ถ้าไม่มีคำนวณจากสถานะและปิดเคส
+              // ถ้า reject = 1 ให้เป็นสีเทา
               let cardColor = 'bg-orange-50';
               let cardBorder = 'border-orange-200';
               let cardColorValue = '0';
               
-              if (colorValue && (colorValue === '0' || colorValue === '1' || colorValue === '2')) {
+              if (rejectValue === '1' || rejectValue === '1.0') {
+                // ถ้า reject = 1 ให้เป็นสีเทา
+                cardColor = 'bg-gray-200';
+                cardBorder = 'border-gray-400';
+              } else if (colorValue && (colorValue === '0' || colorValue === '1' || colorValue === '2')) {
                 // ใช้ค่าจาก Sheet
                 cardColorValue = colorValue;
                 if (colorValue === '2') {
@@ -1209,7 +1264,17 @@ export default function SheetData3() {
                   
                   {/* สถานะตรวจสอบแล้ว */}
                   <div className="flex items-center gap-2 w-full sm:w-auto sm:min-w-[140px] justify-center sm:justify-start">
-                    {isChecked ? (
+                    {loadingCheckboxes.has(index) ? (
+                      <>
+                        <span className="text-orange-600 text-xs sm:text-sm">กำลังอัปเดต...</span>
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 flex items-center justify-center">
+                          <svg className="animate-spin h-5 w-5 sm:h-6 sm:w-6 text-orange-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </div>
+                      </>
+                    ) : isChecked ? (
                       <>
                         <span className="text-orange-900 text-xs sm:text-sm font-semibold">ตรวจสอบแล้ว</span>
                         <div 
@@ -1248,7 +1313,7 @@ export default function SheetData3() {
                     <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
-                    <span className="text-xs font-medium">Reject</span>
+                    <span className="text-xs font-medium">{isRejected ? 'Unreject' : 'Reject'}</span>
                   </button>
                   
                   {/* ปุ่ม Detail */}
@@ -1298,19 +1363,6 @@ export default function SheetData3() {
         onImageClick={handleImageClick}
         rowIndex={selectedRowIndex}
         onDataUpdate={handleDataUpdate}
-      />
-      
-      <DeleteConfirmationModal
-        isOpen={deleteModalOpen}
-        onClose={() => {
-          setDeleteModalOpen(false);
-          setRowToDelete(null);
-        }}
-        onConfirm={handleConfirmDelete}
-        unitName={rowToDelete !== null ? (() => {
-          const unitHeader = headers.find(h => h.includes('หน่วยเลือกตั้ง')) || '';
-          return data[rowToDelete]?.[unitHeader] || '';
-        })() : undefined}
       />
     </>
   );
