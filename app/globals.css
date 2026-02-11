@@ -1,2 +1,19 @@
 @import "tailwindcss";
 
+/* Fix Leaflet popup z-index to not overlap with navbar */
+.leaflet-container {
+  z-index: 1;
+}
+
+.leaflet-popup {
+  z-index: 40 !important;
+}
+
+.leaflet-control {
+  z-index: 40 !important;
+}
+
+/* Ensure navbar stays on top */
+nav {
+  z-index: 50 !important;
+}

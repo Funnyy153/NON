@@ -1,153 +1,422 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useState, useMemo } from "react";
+import { searchMembers, getSubdistricts, getMemberTypes, getAmphoes } from "./data/memberSearch";
+import type { Member } from "./data/members";
+import Navbar from "./components/Navbar2";
 
 export default function Home() {
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
+  // Form state - สำหรับ input และ dropdown (เปลี่ยนได้ตลอดเวลา)
+  const [searchQuery, setSearchQuery] = useState("");
+  const [houseNumber, setHouseNumber] = useState("");
+  const [villageName, setVillageName] = useState("");
+  const [soiRoad, setSoiRoad] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedAmphoe, setSelectedAmphoe] = useState("");
+  const [selectedMemberType, setSelectedMemberType] = useState("");
+  
+  // Active search state - สำหรับการค้นหาจริง (เปลี่ยนเฉพาะเมื่อกดปุ่มค้นหา)
+  const [activeSearchQuery, setActiveSearchQuery] = useState("");
+  const [activeHouseNumber, setActiveHouseNumber] = useState("");
+  const [activeVillageName, setActiveVillageName] = useState("");
+  const [activeSoiRoad, setActiveSoiRoad] = useState("");
+  const [activeDistrict, setActiveDistrict] = useState("");
+  const [activeAmphoe, setActiveAmphoe] = useState("");
+  const [activeMemberType, setActiveMemberType] = useState("");
+  const [showResults, setShowResults] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!password.trim()) {
-      setError("กรุณากรอกรหัสผ่าน");
-      return;
+  const subdistricts = useMemo(() => getSubdistricts(), []);
+  const amphoes = useMemo(() => getAmphoes(), []);
+  const memberTypes = useMemo(() => getMemberTypes(), []);
+
+  // ค้นหาสมาชิก - ใช้ active states เท่านั้น
+  const searchResults = useMemo(() => {
+    let results = searchMembers(activeSearchQuery);
+
+    // กรองตามบ้านเลขที่
+    if (activeHouseNumber) {
+      const searchTerm = activeHouseNumber.toLowerCase().trim();
+      results = results.filter((member) => 
+        member.houseNumber.toLowerCase().includes(searchTerm)
+      );
     }
-    if (password !== "20260111") {
-      setError("รหัสผ่านไม่ถูกต้อง");
-      return;
+
+    // กรองตามหมู่บ้าน
+    if (activeVillageName) {
+      const searchTerm = activeVillageName.toLowerCase().trim();
+      results = results.filter((member) => 
+        member.villageName.toLowerCase().includes(searchTerm)
+      );
     }
-    setError("");
-    // Redirect to before page
-    router.push("/pages/dashboard");
+
+    // กรองตามถนน/ซอย
+    if (activeSoiRoad) {
+      const searchTerm = activeSoiRoad.toLowerCase().trim();
+      results = results.filter((member) => 
+        member.soi.toLowerCase().includes(searchTerm) ||
+        member.road.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // กรองตามตำบล (subdistrict)
+    if (activeDistrict) {
+      results = results.filter((member) => member.subdistrict === activeDistrict);
+    }
+
+    // กรองตามอำเภอ (district)
+    if (activeAmphoe) {
+      results = results.filter((member) => member.district === activeAmphoe);
+    }
+
+    // กรองตามประเภทสมาชิก
+    if (activeMemberType) {
+      results = results.filter((member) => member.memberType === activeMemberType);
+    }
+
+    return results;
+  }, [activeSearchQuery, activeHouseNumber, activeVillageName, activeSoiRoad, activeDistrict, activeAmphoe, activeMemberType]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPassword(e.target.value);
-    if (error) {
-      setError("");
+  const handleSearch = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    // อัพเดท active states จาก form states เมื่อกดปุ่มค้นหา
+    setActiveSearchQuery(searchQuery);
+    setActiveHouseNumber(houseNumber);
+    setActiveVillageName(villageName);
+    setActiveSoiRoad(soiRoad);
+    setActiveDistrict(selectedDistrict);
+    setActiveAmphoe(selectedAmphoe);
+    setActiveMemberType(selectedMemberType);
+    setShowResults(true);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
+
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 font-sans px-4 sm:px-6 lg:px-8 py-8 sm:py-6 pb-16 sm:pb-6 relative">
-      {/* People-party SVG at bottom right of background */}
-      <div className="fixed bottom-2 right-2 sm:bottom-4 sm:right-4 z-0 opacity-60 sm:opacity-100">
-        <Image
-          src="/People-party.svg"
-          alt="People party"
-          width={150}
-          height={120}
-          className="object-contain w-20 h-16 sm:w-32 sm:h-24 md:w-40 md:h-32 lg:w-[150px] lg:h-[120px]"
-        />
-      </div>
+    <>
+      <Navbar/>
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl sm:text-4xl font-bold text-orange-900 mb-2">
+            ค้นหาสมาชิก
+          </h1>
+          <p className="text-orange-700 text-sm sm:text-base">
+            ค้นหาจากเลขสมาชิก, ชื่อ, นามสกุล, เบอร์โทรศัพท์, ตำบล, บ้านเลขที่, หมู่, หมู่บ้าน, ซอย, หรือถนน
+          </p>
+        </div>
 
-      <div className="w-full max-w-md relative z-10">
-        <div className="rounded-xl sm:rounded-2xl p-1 bg-gradient-to-br from-orange-300 via-orange-400 to-orange-500 shadow-2xl">
-          <div className="rounded-xl sm:rounded-2xl p-8 sm:p-8 md:p-10 bg-gradient-to-br from-orange-500 to-orange-600 relative overflow-hidden">
-            {/* Decorative circles */}
-            <div className="absolute -top-10 -right-10 sm:-top-20 sm:-right-20 w-20 h-20 sm:w-40 sm:h-40 bg-white/10 rounded-full blur-2xl"></div>
-            <div className="absolute -bottom-10 -left-10 sm:-bottom-20 sm:-left-20 w-20 h-20 sm:w-40 sm:h-40 bg-white/10 rounded-full blur-2xl"></div>
-
-            <div className="relative z-10">
-              <div className="text-center mb-8 sm:mb-8">
-                <div className="inline-block mb-4 sm:mb-4">
-                  <Image
-                    src="/nonmon.jpg"
-                    alt="Logo"
-                    width={200}
-                    height={200}
-                    className="mx-auto rounded-full w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-[200px] lg:h-[200px] object-cover"
+        {/* Search Bar */}
+        <div className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border-2 border-orange-200 mb-6">
+          <form onSubmit={handleSearch} className="space-y-4">
+            {/* Search Input */}
+            <div className="relative">
+              <label className="block text-sm font-semibold text-orange-800 mb-2">
+                ค้นหา
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  onKeyPress={handleKeyPress}
+                  placeholder="พิมพ์เลขสมาชิก, ชื่อ, นามสกุล, เบอร์โทร, ตำบล, บ้านเลขที่, หมู่, หมู่บ้าน, ซอย, หรือถนน..."
+                  className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base text-left"
+                />
+                <svg
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-orange-400 pointer-events-none"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
-                </div>
-                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-2 drop-shadow-lg">
-                  เข้าสู่ระบบ
-                </h1>
+                </svg>
+              </div>
+            </div>
+
+            {/* Address Filters */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* House Number */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  บ้านเลขที่
+                </label>
+                <input
+                  type="text"
+                  value={houseNumber}
+                  onChange={(e) => setHouseNumber(e.target.value)}
+                  placeholder="เช่น 111, 69/78"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base text-left"
+                />
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-6">
-                <div className="space-y-2">
-                  <label
-                    htmlFor="password"
-                    className="block text-xs sm:text-sm font-semibold text-white mb-2"
-                  >
-                    รหัสผ่าน
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={handlePasswordChange}
-                      className="w-full px-3 py-2.5 sm:px-4 sm:py-3 pr-10 sm:pr-12 border-2 border-white/30 rounded-lg sm:rounded-xl bg-white/90 backdrop-blur-sm text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white focus:border-white transition-all duration-200 shadow-inner text-sm sm:text-base"
-                      placeholder="กรุณากรอกรหัสผ่าน"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
-                    >
-                      {showPassword ? (
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
-                          />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-4 h-4 sm:w-5 sm:h-5"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                          />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                  {error && (
-                    <p className="text-black text-xs sm:text-sm mt-2">
-                      {error}
-                    </p>
-                  )}
-                </div>
+              {/* Village Name */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  หมู่บ้าน
+                </label>
+                <input
+                  type="text"
+                  value={villageName}
+                  onChange={(e) => setVillageName(e.target.value)}
+                  placeholder="เช่น ศุภาลัยพรีโม่"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base text-left"
+                />
+              </div>
 
-                <div className="pt-4 sm:pt-2">
-                  <button
-                    type="submit"
-                    className="w-full bg-blue-900 text-white py-4 px-4 sm:py-4 sm:px-6 rounded-lg sm:rounded-xl font-bold text-base sm:text-lg shadow-lg hover:bg-blue-800 hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-blue-900/50"
-                  >
-                    เข้าสู่ระบบ
-                  </button>
+              {/* Soi/Road */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  ถนน/ซอย
+                </label>
+                <input
+                  type="text"
+                  value={soiRoad}
+                  onChange={(e) => setSoiRoad(e.target.value)}
+                  placeholder="เช่น รัตนาธิเบศร์, ซอย 5"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base text-left"
+                />
+              </div>
+
+              {/* District Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  ตำบล
+                </label>
+                <select
+                  value={selectedDistrict}
+                  onChange={(e) => setSelectedDistrict(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base appearance-none bg-white"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23ea580c\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.25rem' }}
+                >
+                  <option value="">ทั้งหมด</option>
+                  {subdistricts.map((subdistrict) => (
+                    <option key={subdistrict} value={subdistrict}>
+                      {subdistrict}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Amphoe Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  อำเภอ
+                </label>
+                <select
+                  value={selectedAmphoe}
+                  onChange={(e) => setSelectedAmphoe(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base appearance-none bg-white"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23ea580c\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.25rem' }}
+                >
+                  <option value="">ทั้งหมด</option>
+                  {amphoes.map((amphoe) => (
+                    <option key={amphoe} value={amphoe}>
+                      {amphoe}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Member Type Filter */}
+              <div>
+                <label className="block text-sm font-semibold text-orange-800 mb-2">
+                  ประเภทสมาชิก
+                </label>
+                <select
+                  value={selectedMemberType}
+                  onChange={(e) => setSelectedMemberType(e.target.value)}
+                  className="w-full px-4 py-3 pr-12 rounded-lg border-2 border-orange-300 focus:border-orange-500 focus:outline-none text-sm sm:text-base appearance-none bg-white"
+                  style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'%23ea580c\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'/%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1.25rem center', backgroundSize: '1.25rem' }}
+                >
+                  <option value="">ทั้งหมด</option>
+                  {memberTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Search Button */}
+            <div className="pt-2">
+              <button
+                type="submit"
+                onClick={handleSearch}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-orange-500/50"
+              >
+                ค้นหา
+              </button>
+            </div>
+          </form>
+        </div>
+
+        {/* Results */}
+        {showResults && (
+          <div className="bg-white rounded-xl shadow-lg border-2 border-orange-200 overflow-hidden">
+            <div className="p-4 sm:p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-lg sm:text-xl font-bold text-orange-900">
+                  ผลการค้นหา
+                </h2>
+                <span className="text-sm text-orange-700">
+                  พบ {searchResults.length} รายการ
+                </span>
+              </div>
+
+              {searchResults.length === 0 ? (
+                <div className="text-center py-8 text-orange-600">
+                  <p>ไม่พบข้อมูลที่ค้นหา</p>
                 </div>
-              </form>
+              ) : (
+                <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                  {searchResults.map((member) => (
+                    <div
+                      key={member.memberId}
+                      className="p-4 rounded-lg border-2 border-orange-200 hover:border-orange-400 hover:bg-orange-50 cursor-pointer transition-all duration-200"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            เลขสมาชิก:
+                          </span>
+                          <p className="text-sm sm:text-base font-medium text-gray-800">
+                            {member.memberId}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            ชื่อ-นามสกุล:
+                          </span>
+                          <p className="text-sm sm:text-base font-medium text-gray-800">
+                            {member.firstName} {member.lastName}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            ประเภท:
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-800">
+                            {member.memberType}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            เบอร์โทร:
+                          </span>
+                          {member.phone ? (
+                            <a
+                              href={`tel:${member.phone.replace(/-/g, '')}`}
+                              className="text-sm sm:text-base text-blue-600 hover:text-blue-800 hover:underline font-medium block"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {member.phone}
+                            </a>
+                          ) : (
+                            <p className="text-sm sm:text-base text-gray-800">-</p>
+                          )}
+                        </div>
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            อำเภอ:
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-800">
+                            {member.district || "-"}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs text-orange-600 font-semibold">
+                            ตำบล:
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-800">
+                            {member.subdistrict || "-"}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Address Information */}
+                      {(member.houseNumber || member.village || member.villageName || member.soi || member.road) && (
+                        <div className="mt-3 pt-3 border-t border-orange-200">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
+                            {member.houseNumber && (
+                              <div>
+                                <span className="text-xs text-orange-600 font-semibold">
+                                  บ้านเลขที่:
+                                </span>
+                                <p className="text-sm sm:text-base text-gray-800">
+                                  {member.houseNumber}
+                                </p>
+                              </div>
+                            )}
+                            {member.village && (
+                              <div>
+                                <span className="text-xs text-orange-600 font-semibold">
+                                  หมู่:
+                                </span>
+                                <p className="text-sm sm:text-base text-gray-800">
+                                  {member.village}
+                                </p>
+                              </div>
+                            )}
+                            {member.villageName && (
+                              <div>
+                                <span className="text-xs text-orange-600 font-semibold">
+                                  หมู่บ้าน:
+                                </span>
+                                <p className="text-sm sm:text-base text-gray-800">
+                                  {member.villageName}
+                                </p>
+                              </div>
+                            )}
+                            {member.soi && (
+                              <div>
+                                <span className="text-xs text-orange-600 font-semibold">
+                                  ซอย:
+                                </span>
+                                <p className="text-sm sm:text-base text-gray-800">
+                                  {member.soi}
+                                </p>
+                              </div>
+                            )}
+                            {member.road && (
+                              <div>
+                                <span className="text-xs text-orange-600 font-semibold">
+                                  ถนน:
+                                </span>
+                                <p className="text-sm sm:text-base text-gray-800">
+                                  {member.road}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
+    </>
   );
 }

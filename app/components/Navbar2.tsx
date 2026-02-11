@@ -4,16 +4,16 @@ import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { useState } from "react";
 
-export default function Navbar() {
+export default function Navbar2() {
   const pathname = usePathname();
   const router = useRouter();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const navItems = [
-    { label: "Dashboard", path: "/Nonelectiondatacenter/dashboard" },
-    { label: "รายงานก่อนเปิดหีบ", path: "/Nonelectiondatacenter/before" },
-    { label: "รายงานหลังนับคะแนน", path: "/Nonelectiondatacenter/after" },
-    { label: "รายงานความผิดปกติ", path: "/Nonelectiondatacenter/alert" },
+    { label: "ค้นหาสมาชิกพรรค", path: "/" },
+    { label: "ข้อมูลหน่วยเลือกตั้ง", path: "/pages/electionunit" },
+    { label: "ระบบรายงานการเลือกตั้ง", path: "/Nonelectiondatacenter" },
+   
     
   ];
 
